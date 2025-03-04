@@ -14,7 +14,7 @@ Read Mode: 		Bypass
 Write Mode:		Normal
 Reset Mode:		Asynchronous
 
-##Synthesis
+## Synthesis
 This SoC was synthesised onto a [Sipeed Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html).
 I put it onto a breadboard to connect all the IO, as seen below.
 <img src="Images/physical_circuit.jpg" alt="Physical circuit on a breadboard">
@@ -45,3 +45,4 @@ For more info see the docs (Not made yet):
 
 ## Synthesised Chip Array
 <img src="Images/ChipArray_v3_large.png" alt="Chip Array Diagram">
+Just because it is so beautiful!
