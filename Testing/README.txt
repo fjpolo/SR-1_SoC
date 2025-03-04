@@ -1,0 +1,1 @@
+Relevant files for testing purposes (placeholder for the Gowin IP cores, as I could not get their sim package to work)

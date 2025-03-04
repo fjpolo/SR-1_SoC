@@ -1,0 +1,23 @@
+-series GW1NR
+-device GW1NR-9
+-device_version C
+-package QFN88P
+-part_number GW1NR-LV9QN88PC6/I5
+
+
+-mod_name Gowin_PADD
+-file_name gowin_padd
+-path C:/Users/stanr/Documents/16bitComputer/Testing/PADD/gowin_padd/
+-type PADD
+-file_type vlg
+-width_a 18
+-width_b 18
+-source_a shift
+-source_b parallel
+-en_shiftout_a true
+-en_shiftout_b true
+-addsub_op add
+-reset_mode async
+-ina_reg registered
+-inb_reg registered
+-shift_out_reg bypass
