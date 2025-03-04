@@ -1,0 +1,26 @@
+-series GW1NR
+-device GW1NR-9
+-device_version C
+-package QFN88P
+-part_number GW1NR-LV9QN88PC6/I5
+
+
+-mod_name DP_BSRAM8
+-file_name dp_bsram8
+-path C:/Users/stanr/Documents/16bitComputer/CPU/Memory/gowin_dpb/
+-type RAM_DP
+-file_type vlg
+-bram_b true
+-dev_type GW1NR-9C
+-depth_0 32768
+-depth_1 32768
+-width_0 8
+-width_1 8
+-read_mode_0 bypass
+-read_mode_1 bypass
+-write_mode_0 normal
+-write_mode_1 normal
+-speed false
+-reset_mode async
+-init_file C:\Users\stanr\Documents\16bitComputer\Compilation\tetra.mi
+-init_match port_A

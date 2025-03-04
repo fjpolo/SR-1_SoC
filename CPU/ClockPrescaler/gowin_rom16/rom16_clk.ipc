@@ -1,0 +1,13 @@
+[General]
+ipc_version=4
+file=rom16_clk
+module=ROM16_CLK
+target_device=gw1nr9c-004
+type=ssram_rom16
+version=1.0
+
+[Config]
+DEPTH=16
+LANG=0
+MEM_FILE=C:/Users/stanr/Documents/16bitComputer/CPU/ClockPrescaler/rom_prescale_values.mi
+WIDTH=24
