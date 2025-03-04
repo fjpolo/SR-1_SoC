@@ -1,0 +1,24 @@
+1 Frame is 8192b or 1024B.
+
+The frame buffer will consist of 1 BSRAM unit, split into two pages.
+The aim is to have a 60fps (16.7ms per frame) output. Frame transmission takes approximately 11.5ms @ 800kHz. With a single read/write frame buffer, this only leaves 5.2ms to draw the entire frame. As a BSRAM unit is 2048 addresses in byte addressable mode, A single BSRAM unit is sufficient to contain both frame buffers. These can be alternated between, leaving the full 16.7ms for frame generation.
+
+In order to allow for sufficient frame generation time, the frame buffer must be dual read / write.
+
+	     BSRAM                L
+	    1B WORD               S
+Address    ---------- Binary      B
+0000-1023  | PAGE 0 | 0XX XXXX XXXX
+1024-2047  | PAGE 1 | 1XX XXXX XXXX
+           ----------
+
+This pages will alternate between being written to and read from, with the finished frame being sent to the display and the new frame being written to in the other page. 
+
+The page can be selected using the 10th bit of the address (using 0th bit as the first).
+
+The frame buffer will be initialised to the image stored in logo.png
+
+On the GPU side, the frame buffer has 3 main control signals:
+- set_pixel (Sets pixel according to x and y coordinates [as outlined in the display doc], with a colour determined below)
+- set_colour (Sets the write colour to either white or black. Reads off of the main data bus. 0 = black, >0 = white)
+- set_word (ignores least significant 3 bits, and sets an entire byte based on byte_in)

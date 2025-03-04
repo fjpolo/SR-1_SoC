@@ -1,0 +1,13 @@
+[General]
+ipc_version=4
+file=rom16_i2fp
+module=ROM16_I2FP
+target_device=gw1nr9c-004
+type=ssram_rom16
+version=1.0
+
+[Config]
+DEPTH=16
+LANG=0
+MEM_FILE=C:/Users/stanr/Documents/16bitComputer/GPU/FloatingPoint/FP_Int2fp/init_rom.mi
+WIDTH=16

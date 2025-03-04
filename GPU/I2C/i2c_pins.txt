@@ -1,0 +1,6 @@
+	  PULL UP | OPEN DRAIN | PIN NUMBER
+SCL     : PULL UP |     ON     |     32
+SDA_IN  : NONE    |     N/A    |     49
+SDA_OUT : PULL UP |     ON     |     31
+
+Pins for current setup (22/01/25)
