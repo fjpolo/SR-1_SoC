@@ -9,9 +9,9 @@
 # Write mode = Normal
 # Then select your generated mi file
 #
-# Copyright (C) 2025 Stanley Booth - All Rights Reserved
+# Copyright © 2025 Stanley Booth - All Rights Reserved
 # You may use, distribute and modify this code under the
-# terms of the CC BY NC license
+# terms of the CC BY-NC 4.0 license
 
 # !! FOR 128x64 'IMAGES' ONLY !!
 
