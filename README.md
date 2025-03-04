@@ -1,5 +1,5 @@
 ## Project
-<img src="Images/title.png" alt="SR-1 Logo">
+<img src="Images/Title.png" alt="SR-1 Logo">
 This is a 16bit CPU and GPU that I have written in SystemVerilog.
 
 [Watch the Tetrahedron Demo on YouTube](https://youtu.be/6NJTSfFw-bk)
