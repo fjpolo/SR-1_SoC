@@ -3,7 +3,6 @@
 This is a 16bit CPU and GPU that I have written in SystemVerilog.
 
 [Watch the Tetrahedron Demo on YouTube](https://youtu.be/6NJTSfFw-bk)
-The memory is currently initialised to the above program.
 
 ## Programming
 To program the system, you must first create a .mi file and then recreate the [DP_BSRAM8 file](CPU/Memory/gowin_dp/dp_bsram8.v)
