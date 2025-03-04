@@ -5,7 +5,7 @@ This is a 16bit CPU and GPU that I have written in SystemVerilog.
 [Watch the Tetrahedron Demo on YouTube](https://youtu.be/6NJTSfFw-bk)
 
 ## Programming
-To program the system, you must first create a .mi file and then recreate the [DP_BSRAM8 file](CPU/Memory/gowin_dp/dp_bsram8.v)
+To program the system, you must first create a .mi file and then recreate the [DP_BSRAM8 file](CPU/Memory/gowin_dpb/dp_bsram8.v)
 The parameters to do so are as follows:
 Module Name: 	DP_BSRAM8
 Address Depth:	32768 (for both ports)
