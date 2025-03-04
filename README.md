@@ -4,6 +4,10 @@ This is a 16bit CPU and GPU that I have written in SystemVerilog.
 
 [Watch the Tetrahedron Demo on YouTube](https://youtu.be/6NJTSfFw-bk)
 
+## License
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**.
+See the [LICENSE](LICENSE) file for more details, especially regarding media, as this is not covered under the above license.
+
 ## Programming
 To program the system, you must first create a .mi file and then recreate the [DP_BSRAM8 file](CPU/Memory/gowin_dpb/dp_bsram8.v)
 The parameters to do so are as follows:
@@ -18,10 +22,6 @@ Reset Mode:		Asynchronous
 This SoC was synthesised onto a [Sipeed Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html).
 I put it onto a breadboard to connect all the IO, as seen below.
 <img src="Images/physical_circuit.jpg" alt="Physical circuit on a breadboard">
-
-## License
-This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)**.
-See the [LICENSE](LICENSE) file for more details, especially regarding media, as this is not covered under the above license.
 
 ## CPU Block Diagram
 For more info see the docs (Not made yet):
