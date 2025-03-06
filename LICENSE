@@ -22,3 +22,6 @@ These media files are not covered under the Creative Commons Attribution-NonComm
 You are permitted to use and view these media files for personal and non-commercial purposes, but you may not modify, distribute, or publicly rehost them without explicit written permission from the copyright holder.
 
 For inquiries regarding usage, please contact https://github.com/SRB2149.
+
+Any of the GOWIN files, (MULT18, DP_BSRAM8, etc) are not my own, and were made by the GOWIN IP Core generator from the free Gowin V1.9 Education version FPGA Designer.
+These are obviously not covered under the above license, and follow the license they were released under.
