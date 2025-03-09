@@ -306,8 +306,10 @@ module Opcodes (output Microcode_enum ucode,
 					6'd4 : ucode = PC_to_MAR_ADDR;
 					6'd5 : ucode = WAIT_CYCLE;
 					6'd6 : ucode = RAM_to_MAR;
-					6'd7 : ucode = DATA_XFER;
-					default : ucode = ENDMICRO;
+					6'd7 : ucode = WAIT_CYCLE;
+					6'd8 : ucode = DATA_XFER;
+					6'd9 : ucode = INC_PC; //Added becayse data xfer sets dual op to 0
+					default : ucode = ENDMICRO; //(but currently points to top of 2B value)
 				endcase
 				
 			CPY2 : unique case (cycle) //TO addr1 FROM addr2 (2B transfer)
@@ -318,9 +320,10 @@ module Opcodes (output Microcode_enum ucode,
 					6'd4 : ucode = PC_to_MAR_ADDR;
 					6'd5 : ucode = WAIT_CYCLE;
 					6'd6 : ucode = RAM_to_MAR;
-					6'd7 : ucode = DATA_XFER;
-					6'd8 : ucode = WAIT_CYCLE;
-					6'd9 : ucode = DATA_XFER;
+					6'd7 : ucode = WAIT_CYCLE;
+					6'd8 : ucode = DATA_XFER;
+					6'd9 : ucode = INC_PC;
+					6'd10: ucode = DATA_XFER;
 					default : ucode = ENDMICRO;
 				endcase
 				
