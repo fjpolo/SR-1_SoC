@@ -1,0 +1,233 @@
+LDDI 999
+SMT
+WMT
+CPY MM_CLKPRE clkspd
+GDT3 gINI 0 0
+GPU
+GDT3 gSNF 0 0
+GPU
+WGPU
+LDAI 1			//Generating centre line coords
+GDT3 gLDI 0 63
+GPU
+GDT3 gLDI 1 1
+GPU
+ADDI 1
+RDA *11+1
+ADDI 1
+RDA *13+1
+RDA *13+3
+ATB
+SUBI 65
+JPZ *25
+BTA
+JMP *11
+LDAI 65
+GDT3 gLDI 64 64
+GPU
+GDT3 gLDI 65 0
+GPU
+ADDI 1
+RDA *26+1
+ADDI 1
+RDA *28+1
+ATB
+SUBI 65
+RDA *28+3
+SUBI 64
+JPZ *41
+BTA
+JMP *26
+GDT3 gLDI 128 0 //Loading top and bottom line coords
+GPU
+GDT3 gLDI 129 0
+GPU
+GDT3 gLDI 130 127
+GPU
+GDT3 gLDI 131 0
+GPU
+GDT3 gLDI 132 0
+GPU
+GDT3 gLDI 133 63
+GPU
+GDT3 gLDI 134 127
+GPU
+GDT3 gLDI 135 63
+GPU
+GDT3 gLDI 136 125 //Paddle X (Y coord at 137)
+GPU
+GDT3 gLDI 138 125 //Paddle X (Y coord at 139)
+GPU
+LDA paddleY
+RDA *65+3
+ADDI 7 //PADDLE WIDTH
+RDA *67+3
+GDT3 gLDI 137 27
+GPU
+GDT3 gLDI 139 35
+GPU
+SHM
+LDA MM_BUTTON //Downwards movement
+ANDI 4
+SFM
+JPZ *79
+LDA paddleY
+LDDI 55
+JPE *79
+ADDI 1
+RDA paddleY
+SHM 
+LDA MM_BUTTON //Upwards movement
+ANDI 8
+SFM
+JPZ *89
+LDA paddleY
+LDDI 1
+JPE *89
+SUBI 1
+RDA paddleY
+LDA velY //Ball Y movement
+LDDI 0   //Downwards movement (y inverted display)
+JPE *102
+LDA ballY
+ADDI 1 //BALL Y SPEED
+LDDI 63
+JPE *98
+RDA ballY
+JMP *111
+LDA velY
+XORI 1
+RDA velY
+JMP *111
+LDA ballY //Upwards movement
+SUBI 1 //BALL Y SPEED
+LDDI 1 
+JPE *108
+RDA ballY
+JMP *111
+LDA velY
+XORI 1
+RDA velY
+LDA ballY
+RDA *113+3
+GDT3 gLDI 141 31 //Sending ball Y coord to GPU
+GPU
+LDA velX //Ball X movement
+LDDI 0
+JPE *160
+LDA ballX
+ADD ballSpdX //BALL X SPEED
+LDDI 122
+JPG *124
+RDA ballX //Movement
+JMP *148
+LDDI 124
+JPG *122
+JMP *194
+NXI
+NXI
+NXI
+NXI //Made a mistake, couldnt be bothered to change all later JMP locations, so jumped to end
+NXI
+NXI
+NXI
+LDDI 123 //Collision
+JPE *138
+SUBI 1
+JMP *139
+ADDI 1
+SHM      //Score increment
+LDA score
+ADDI 1
+RDA score
+SFM
+LDA velX //Change directions
+XORI 1
+RDA velX
+JMP *174
+LDA ballX //RESET
+LDDI 145 //Small delay as ball goes off screen
+JPL *174
+LDA ballXStart
+RDA ballX
+LDA ballYStart //Y coord not reset (better gameplay)
+NXI
+SHM
+LDAI 0
+RDA score
+SFM
+JMP *174
+LDA ballX //Leftwards movement
+SUB ballSpdX //BALL X SPEED
+LDDI 1 
+JPE *168
+LDDI 2
+JPE *170
+RDA ballX
+JMP *174
+ADDI 1
+JMP *171
+SUBI 1
+LDA velX
+XORI 1
+RDA velX
+LDA ballX //Sending ball X coord to GPU
+RDA *176+3
+GDT3 gLDI 140 31
+GPU
+CPY MM_LEDS score //Showing score on the LEDs
+GDT7 gDRP 0 0 0 2 2 63 //Draw centre (dotted) line
+GPU
+GDT7 gDRL 128 0 130 4 4 2 //Draw top and bottom lines and paddle
+GPU
+GDT7 gDRL 128 0 132 0 0 0 //Draw left line
+GPU
+LDA ballX
+LDDI 127
+JPG *190
+GDT7 gDRP 140 0 0 0 0 0 //Draw ball
+GPU
+WFT
+GDT3 gSNF 0 0
+GPU
+JMP *61
+ATC
+LDA ballY
+LDD paddleY //Hit paddle?
+JPL *219
+ATB
+LDA paddleY
+ADDI 7 //PADDLE WIDTH
+ATD
+BTA
+JPG *219
+SHM
+LDA MM_BUTTON
+ANDI 4
+RDA buttonPressed
+LDA MM_BUTTON
+ANDI 8
+ORB buttonPressed
+SFM
+JPZ *215
+LDAI 2
+JMP *216
+LDAI 1
+RDA ballSpdX
+CTA
+JMP *134
+CTA
+RDA ballX //Movement
+JMP *148
+
+VAR1 clkspd 1
+VAR2 paddleY 27
+VAR2 ballXStart 31
+VAR2 ballYStart 31
+VAR2 ballX 31
+VAR2 ballY 31
+VAR2 velX 1
+VAR2 velY 1
+VAR1 score 0
+VAR2 ballSpdX 2
+VAR1 buttonPressed 0
