@@ -303,8 +303,8 @@ module Opcodes (output Microcode_enum ucode,
 					6'd1 : ucode = PC_to_MAR_ADDR;
 					6'd2 : ucode = INC_PC;
 					6'd3 : ucode = RAM_to_MTAR;
-					6'd4 : ucode = PC_to_MAR;
-					6'd5 : ucode = INC_PC;
+					6'd4 : ucode = PC_to_MAR_ADDR;
+					6'd5 : ucode = WAIT_CYCLE;
 					6'd6 : ucode = RAM_to_MAR;
 					6'd7 : ucode = DATA_XFER;
 					default : ucode = ENDMICRO;
@@ -315,11 +315,11 @@ module Opcodes (output Microcode_enum ucode,
 					6'd1 : ucode = PC_to_MAR_ADDR;
 					6'd2 : ucode = INC_PC;
 					6'd3 : ucode = RAM_to_MTAR;
-					6'd4 : ucode = PC_to_MAR;
-					6'd5 : ucode = INC_PC;
+					6'd4 : ucode = PC_to_MAR_ADDR;
+					6'd5 : ucode = WAIT_CYCLE;
 					6'd6 : ucode = RAM_to_MAR;
 					6'd7 : ucode = DATA_XFER;
-					6'd8 : ucode = INC_PC;
+					6'd8 : ucode = WAIT_CYCLE;
 					6'd9 : ucode = DATA_XFER;
 					default : ucode = ENDMICRO;
 				endcase
@@ -414,6 +414,30 @@ module Opcodes (output Microcode_enum ucode,
 				
 			HLT : unique case (cycle) //Stop the CPU clock
 					6'd0 : ucode = HLT_CLK;
+					default : ucode = ENDMICRO;
+				endcase
+				
+			JPG : unique case (cycle) //Jump if A reg > D reg
+					6'd0 : ucode = INC_PC;
+					6'd1 : ucode = PC_to_MAR_ADDR;
+					6'd2 : ucode = WAIT_CYCLE;
+					6'd3 : ucode = RAM_to_PC_GF;
+					default : ucode = ENDMICRO;
+				endcase
+				
+			JPL : unique case (cycle) //Jump if A reg < D reg
+					6'd0 : ucode = INC_PC;
+					6'd1 : ucode = PC_to_MAR_ADDR;
+					6'd2 : ucode = WAIT_CYCLE;
+					6'd3 : ucode = RAM_to_PC_LF;
+					default : ucode = ENDMICRO;
+				endcase
+				
+			JPE : unique case (cycle) //Jump if A reg == D reg
+					6'd0 : ucode = INC_PC;
+					6'd1 : ucode = PC_to_MAR_ADDR;
+					6'd2 : ucode = WAIT_CYCLE;
+					6'd3 : ucode = RAM_to_PC_EF;
 					default : ucode = ENDMICRO;
 				endcase
 			

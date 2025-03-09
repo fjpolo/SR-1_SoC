@@ -2,7 +2,7 @@ import OpcodePackage::*;
 import MicrocodePackage::*;
 
 module CPU16(output logic [5:0] n_leds, debug,
-		output logic SCL, SDA_OUT,
+		output logic SCL, SDA_OUT, debug_single,
 		input logic [7:0] n_wide_sw_hi, n_wide_sw_lo, n_thin_sw,
 		input logic clk_in, n_reset, SDA_IN, n_enter_btn, n_l_btn, n_r_btn, n_t_btn, n_b_btn, n_p0_btn, n_p1_btn);
 	
@@ -65,7 +65,7 @@ module CPU16(output logic [5:0] n_leds, debug,
 	assign half_mode = half_mode_reg || half_mode_override;
 	
 	//CPU conditional jump flags
-	logic set_flags, flag_carry, flag_zero, alu_zero_f, alu_carry_f;
+	logic set_flags, flag_carry, flag_zero, flag_greater, flag_lesser, flag_equal, alu_zero_f, alu_carry_f;
 	
 	always_ff @ (posedge clk , posedge reset)
 	begin : CPU_Flag_Registers
@@ -83,6 +83,10 @@ module CPU16(output logic [5:0] n_leds, debug,
 			end
 		end
 	end
+	
+	assign flag_greater = (reg_a > reg_d);
+	assign flag_lesser = (reg_a < reg_d);
+	assign flag_equal = (reg_a == reg_d);
 	
 	//ALU
 	logic alu_sub, alu_mult, alu_and, alu_or, alu_xor, alu_not, alu_bytewise, alu_lshift, alu_rshift;
@@ -170,6 +174,7 @@ module CPU16(output logic [5:0] n_leds, debug,
 	
 	assign n_leds = ~display_leds[5:0];
 	assign debug = instruction_reg[5:0];
+	assign debug_single = ram_dual_op;
 	
 	//Data bus
 	assign data_bus = (dbo_ram | dbo_ra | dbo_rb | dbo_rc | dbo_rd | dbo_pc);

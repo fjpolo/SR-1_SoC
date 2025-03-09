@@ -9,7 +9,7 @@ module Microcode (output logic half_mode_override, set_flags, set_half_mode, set
 				ms_timer_start, us_timer_start,																//Timers
 				gpu_start,																					//GPU
 				hlt_gpu, hlt_dubdab, hlt_ms, hlt_us, hlt_ftu, hlt_cpu,										//HLT
-				input Microcode_enum current_microcode, input logic flag_carry, flag_zero);
+				input Microcode_enum current_microcode, input logic flag_carry, flag_zero, flag_greater, flag_lesser, flag_equal);
 	
 	always_comb
 	begin
@@ -129,6 +129,36 @@ module Microcode (output logic half_mode_override, set_flags, set_half_mode, set
 			
 			RAM_to_PC_ZF : begin //JPZ
 				if (flag_zero)
+				begin
+					ram_read = '1;
+					ram_rd_as_addr = '1;
+					set_pc = '1;
+					half_mode_override = '1;
+				end
+			end
+			
+			RAM_to_PC_GF : begin //JPG
+				if (flag_greater)
+				begin
+					ram_read = '1;
+					ram_rd_as_addr = '1;
+					set_pc = '1;
+					half_mode_override = '1;
+				end
+			end
+			
+			RAM_to_PC_LF : begin //JPL
+				if (flag_lesser)
+				begin
+					ram_read = '1;
+					ram_rd_as_addr = '1;
+					set_pc = '1;
+					half_mode_override = '1;
+				end
+			end
+			
+			RAM_to_PC_EF : begin //JPE
+				if (flag_equal)
 				begin
 					ram_read = '1;
 					ram_rd_as_addr = '1;

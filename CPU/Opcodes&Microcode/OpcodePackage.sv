@@ -51,7 +51,10 @@ package OpcodePackage;
 		WGPU,   // 0x2F 101111
 		SHM,    // 0x30 110000
 		SFM,    // 0x31 110001
-		HLT     // 0x32 110010
+		HLT,    // 0x32 110010
+		JPG,    // 0x33 110011
+		JPL,    // 0x34 110100
+		JPE     // 0x35 110101
 	} Opcode_enum;
 
 endpackage

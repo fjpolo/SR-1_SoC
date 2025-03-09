@@ -493,7 +493,7 @@ module RAM (output logic [15:0] db_out, gpu_cpu_data, gpu_pca, gpu_pcb,
 	);
 	
 	//CPU / GPU Clock Prescaler
-	RW_Byte #(.ADDRESS(15'h7FFF), .RESET_VALUE(8'd1)) cpu_clock_scale (
+	RW_Byte #(.ADDRESS(15'h7FFF), .RESET_VALUE(8'd7)) cpu_clock_scale (
 		.db_out(dbo_ccs),
 		.data_bus(data_bus),
 		.value(clk_pre),
