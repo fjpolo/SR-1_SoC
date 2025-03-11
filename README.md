@@ -11,12 +11,12 @@ See the [LICENSE](LICENSE) file for more details, especially regarding media, as
 ## Programming
 To program the system, you must first create a .mi file and then recreate the [DP_BSRAM8 file](CPU/Memory/gowin_dpb/dp_bsram8.v)  
 The parameters to do so are as follows:
--Module Name: 	DP_BSRAM8
--Address Depth:	32768 (for both ports)
--Data Width:		8 (for both ports)
--Read Mode: 		Bypass
--Write Mode:		Normal
--Reset Mode:		Asynchronous
+- Module Name: 	    DP_BSRAM8
+- Address Depth:	32768 (for both ports)
+- Data Width:		8 (for both ports)
+- Read Mode: 		Bypass
+- Write Mode:		Normal
+- Reset Mode:		Asynchronous
 
 ## Synthesis
 This SoC was synthesised onto a [Sipeed Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html).  
@@ -24,7 +24,8 @@ I put it onto a breadboard to connect all the IO, as seen below.
 <img src="Images/physical_circuit.jpg" alt="Physical circuit on a breadboard">
 
 ## CPU Block Diagram
-For more info see the docs (Not made yet):
+For more info see the docs (Not made yet)  
+
 <img src="Images/cpu_block.png" alt="CPU Block Diagram">
 
 ## CPU Registers
