@@ -1,0 +1,288 @@
+//Pong Version 2.0
+
+VAR1 clkspd 1
+VAR2 paddleY 256
+VAR2 paddleWidth 9 //= TrueWidth - 1
+VAR2 paddleMoveSpeed 9
+VAR2 ballXStart 32
+VAR2 ballX 248
+VAR2 ballY 248
+VAR2 ballX8 0
+VAR2 ballY8 0
+VAR2 spdX 7
+VAR2 spdY 4
+VAR2 paddleMaxY 0 //Will be calculated later
+VAR2 paddleMinY 8
+VAR1 dirX 1
+VAR1 dirY 1
+VAR1 score 0
+VAR1 buttonPressed 0
+VAR2 spdX0 8
+VAR2 spdY0 2
+VAR2 spdX1 7
+VAR2 spdY1 4
+VAR2 spdX2 6
+VAR2 spdY2 6
+VAR2 spdX3 4
+VAR2 spdY3 7
+
+//Start
+LDDI 999
+SMT
+WMT
+SMT
+CPY MM_CLKPRE clkspd
+GDT3 gINI 0 0
+GPU
+GDT3 gSNF 0 0
+GPU
+WMT
+
+//Generating centre line coords
+LDAI 1
+GDT3 gLDI 0 63 (coordGenX1)
+GPU
+GDT3 gLDI 1 1 (coordGenY1)
+GPU
+ADDI 1
+RDA *coordGenX1+1
+ADDI 1
+RDA *coordGenY1+1
+RDA *coordGenY1+3
+ATB
+SUBI 65
+JPZ *secondLineStart
+BTA
+JMP *coordGenX1
+LDAI 65 (secondLineStart)
+GDT3 gLDI 64 64 (coordGenX2)
+GPU
+GDT3 gLDI 65 0 (coordGenY2)
+GPU
+ADDI 1
+RDA *coordGenX2+1
+ADDI 1
+RDA *coordGenY2+1
+ATB
+SUBI 65
+RDA *coordGenY2+3
+SUBI 64
+JPZ *loadPitch
+BTA
+JMP *coordGenX2
+
+//Loading top and bottom line coords
+GDT3 gLDI 128 0 (loadPitch)
+GPU
+GDT3 gLDI 129 0
+GPU
+GDT3 gLDI 130 127
+GPU
+GDT3 gLDI 131 0
+GPU
+GDT3 gLDI 132 0
+GPU
+GDT3 gLDI 133 63
+GPU
+GDT3 gLDI 134 127
+GPU
+GDT3 gLDI 135 63
+GPU
+GDT3 gLDI 136 125 //Paddle X (Y coord at 137)
+GPU
+GDT3 gLDI 138 125 //Paddle X (Y coord at 139)
+GPU
+
+//Calculating paddleMaxY
+LDAI 63
+SUB paddleWidth
+MULI 8
+RDA paddleMaxY
+
+//Paddle movement
+SHM (mainLoopStart)
+LDA MM_BUTTON //Downwards movement
+ANDI 4
+SFM
+JPZ *checkNextButton
+LDA paddleY
+ADD paddleMoveSpeed
+LDD paddleMaxY
+JPG *checkNextButton
+RDA paddleY
+SHM (checkNextButton)
+LDA MM_BUTTON //Upwards movement
+ANDI 8
+SFM
+JPZ *ballYMovement
+LDA paddleY
+SUB paddleMoveSpeed
+LDD paddleMinY
+JPL *ballYMovement
+RDA paddleY
+
+//Ball Y Movement
+SHM
+LDA dirY (ballYMovement)
+SFM
+LDDI 0
+JPE *ballMovingUp
+LDA ballY
+ADD spdY
+LDDI 488
+JPG *bounceY
+RDA ballY (writeBallY)
+JMP *ballXMovement
+LDA ballY (ballMovingUp)
+SUB spdY
+LDDI 8
+JPL *bounceY
+JMP *writeBallY
+SHM (bounceY)
+LDA dirY
+XORI 1
+RDA dirY
+
+//Ball X Movement
+SHM (ballXMovement)
+LDA dirX
+SFM
+LDDI 0
+JPE *ballMovingLeft
+LDA ballX
+ADD spdX
+LDDI 992
+JPL *writeBallX
+LDDI 1000
+JPG *writeBallX
+ATB
+LDA ballY
+ADDI 8
+LDD paddleY
+JPL *missedBall
+LDA paddleWidth
+MULI 8
+ADD paddleY
+ATD
+LDA ballY
+JPG *missedBall
+
+//Ball hit paddle
+BTA
+RDA ballX
+LDA ballY
+ADDI 8
+SUB paddleY
+LDDI 11
+JPL *setSpd3
+LDDI 22
+JPL *setSpd2
+LDDI 33
+JPL *setSpd1
+LDDI 55
+JPL *setSpd0
+LDDI 66
+JPL *setSpd1
+LDDI 77
+JPL *setSpd2
+JMP *setSpd3
+
+CPY2 spdX spdX0 (setSpd0)
+CPY2 spdY spdY0
+JMP *bounceX
+CPY2 spdX spdX1 (setSpd1)
+CPY2 spdY spdY1
+JMP *bounceX
+CPY2 spdX spdX2 (setSpd2)
+CPY2 spdY spdY2
+JMP *bounceX
+CPY2 spdX spdX3 (setSpd3)
+CPY2 spdY spdY3
+JMP *bounceX
+
+//Ball moving to the left
+LDA ballX (ballMovingLeft)
+SUB spdX
+LDDI 7
+JPG *writeBallX
+SHM (bounceX)
+LDA dirX
+XORI 1
+RDA dirX
+SFM
+JMP *startDrawing
+BTA (missedBall)
+RDA ballX (writeBallX)
+
+//Drawing
+LDA ballX (startDrawing)
+LDDI 1200
+JPL *startDiv
+LDA ballXStart
+RDA ballX
+RSHFT (startDiv) //Dividing coords
+RSHFT
+RSHFT
+RDA ballX8
+LDA ballY
+RSHFT
+RSHFT
+RSHFT
+RDA ballY8
+CPY MM_LEDS score //Showing score on the LEDs
+GDT7 gDRP 0 0 0 2 2 63 //Draw centre (dotted) line
+GPU
+LDA paddleY
+RSHFT
+RSHFT
+RSHFT
+RDA *paddleY0coord+3
+ADD paddleWidth
+RDA *paddleY1coord+3
+GDT3 gLDI 137 0 (paddleY0coord)
+GPU
+GDT3 gLDI 139 0 (paddleY1coord)
+GPU
+GDT7 gDRL 128 0 130 4 4 2 //Draw top and bottom lines and paddle
+GPU
+GDT7 gDRL 128 0 132 0 0 0 //Draw left line
+GPU
+LDA ballY8
+RDA *BL_coordY+3
+RDA *BR_coordY+3
+ADDI 1
+RDA *TL_coordY+3
+RDA *TR_coordY+3
+LDA ballX8
+LDDI 127
+JPG *skipDrawBall
+RDA *BL_coordX+3
+RDA *TL_coordX+3
+LDDI 126
+JPG *skipDrawBall
+ADDI 1
+RDA *BR_coordX+3
+RDA *TR_coordX+3
+GDT3 gLDI 140 0 (BL_coordX) //Bottom Left
+GPU
+GDT3 gLDI 141 0 (BL_coordY)
+GPU
+GDT3 gLDI 142 0 (BR_coordX) //Bottom Right
+GPU
+GDT3 gLDI 143 0 (BR_coordY)
+GPU
+GDT3 gLDI 144 0 (TL_coordX) //Top Left
+GPU
+GDT3 gLDI 145 0 (TL_coordY)
+GPU
+GDT3 gLDI 146 0 (TR_coordX) //Top Right
+GPU
+GDT3 gLDI 147 0 (TR_coordY)
+GPU
+GDT7 gDRP 140 0 0 2 2 3 //Draw ball (2x2)
+GPU
+WFT (skipDrawBall)
+GDT3 gSNF 0 0
+GPU
+WGPU
+JMP *mainLoopStart
