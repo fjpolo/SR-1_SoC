@@ -5,7 +5,7 @@
     Send "{Tab}"
     SendText "dp_bsram8"
     Send "{Tab 2}"
-    SendText "Placeholder\CPU\Memory" ;EDIT ME!
+    SendText "Placeholder\CPU\Memory\gowin_dpb" ;EDIT ME!
     Sleep 100
     Send "{Tab 6}"
     SendText "32768"
