@@ -81,7 +81,7 @@ def fp16ToHex(fp16):
     return hex(np.float16(fp16).view('H'))[2:].zfill(4)
     
 def int16ToHex(i16, line = "UNKNOWN"):
-    if i16 > 65335:
+    if i16 > 65535:
         error("ERROR: Value too large on line: " + line)
         return "FFFF"
     else:
@@ -170,9 +170,9 @@ def numToHex(arg, half, line):
                 arg = arg[2:]
                 num = int(arg, 2)
                 if half:
-                    byteData.append(int8ToHex(num, str(lineNum)))
+                    byteData.append(int8ToHex(num, line))
                 else:
-                    integerData = int16ToHex(num, str(lineNum))
+                    integerData = int16ToHex(num, line)
                     byteData.append(integerData[2:4])
                     byteData.append(integerData[0:2])
             except:
@@ -182,9 +182,9 @@ def numToHex(arg, half, line):
                 arg = arg[2:]
                 num = int(arg, 16)
                 if half:
-                    byteData.append(int8ToHex(num, str(lineNum)))
+                    byteData.append(int8ToHex(num, line))
                 else:
-                    integerData = int16ToHex(num, str(lineNum))
+                    integerData = int16ToHex(num, line)
                     byteData.append(integerData[2:4])
                     byteData.append(integerData[0:2])
             except:
@@ -192,9 +192,9 @@ def numToHex(arg, half, line):
         else:
             try:
                 if half:
-                    byteData.append(int8ToHex(int(arg), str(lineNum)))
+                    byteData.append(int8ToHex(int(arg), line))
                 else:
-                    integerData = int16ToHex(int(arg), str(lineNum))
+                    integerData = int16ToHex(int(arg), line)
                     byteData.append(integerData[2:4])
                     byteData.append(integerData[0:2])
             except:
