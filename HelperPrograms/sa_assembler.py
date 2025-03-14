@@ -301,8 +301,8 @@ for line in lines:
     if opIndex != -1:
         firstPass.append(operation)
         
-        OpInstruction = opcodes[opIndex]
-        width = OpInstruction.width
+        opInstruction = opcodes[opIndex]
+        width = opInstruction.width
         
         if width == -1:
             if halfMode:
@@ -310,12 +310,12 @@ for line in lines:
             else:
                 width = 2
                 
-        if OpInstruction.name == "SHM":
+        if opInstruction.name == "SHM":
             halfMode = True
-        elif OpInstruction.name == "SFM":
+        elif opInstruction.name == "SFM":
             halfMode = False
         
-        args = scanForArguments(line, OpInstruction.args, OpInstruction.name)
+        args = scanForArguments(line, opInstruction.args, opInstruction.name)
         
         gpuOperation = False
         gpuOpIndex = 0
@@ -330,8 +330,8 @@ for line in lines:
                 firstPass = firstPass + numToHex(arg, ((halfMode and not gpuOperation) or (gpuArgWidths[gpuOpIndex] == 1 and gpuOperation)), str(lineNum))
                 gpuOpIndex += 1
                 
-                if not OpInstruction.width == -1 and not gpuOperation:
-                    warning("WARNING: Numeric argument for non immediate or GPU operation on line " + str(lineNum))
+                if not opInstruction.width == -1 and not gpuOperation:
+                    warning("WARNING: Numeric argument for non immediate or GPU operation (" + opInstruction.name + ") on line " + str(lineNum))
                 
             elif arg in gpuOpcodes:
                 firstPass.append(arg)
@@ -353,14 +353,14 @@ for line in lines:
                     print("Found reference to (" + arg + ") on line " + str(lineNum))
                 firstPass.append('v:' + arg)
                 firstPass.append("^^^")
-                varHalfError(OpInstruction, arg, lineNum, halfMode)
+                varHalfError(opInstruction, arg, lineNum, halfMode)
 
             else:
                 if debug:
                     print("Found reference to possible variable (" + arg + ") on line " + str(lineNum))
                 firstPass.append('v:' + arg)
                 firstPass.append("^^^")
-                varHalfError(OpInstruction, arg, lineNum, halfMode)
+                varHalfError(opInstruction, arg, lineNum, halfMode)
                 
     elif operation[:3] == "VAR":
         args = scanForArguments(line, 2, "VAR")
