@@ -1,0 +1,566 @@
+//Breakout
+
+//Setup
+VAR1 clkspd 1
+
+//Levels
+VAR2 lvlR0 0xFFFF
+VAR2 lvlR1 0x8421
+VAR2 lvlR2 0xBDAD
+VAR2 lvlR3 0x8463
+VAR2 lvlR4 0xF5AD
+VAR2 lvlR5 0xF5AD
+VAR2 lvlR6 0x85A1
+VAR2 lvlR7 0xFFFF
+
+VAR2 lvl1R0 0xFFFF
+VAR2 lvl1R1 0x8421
+VAR2 lvl1R2 0xBDAD
+VAR2 lvl1R3 0x8463
+VAR2 lvl1R4 0xF5AD
+VAR2 lvl1R5 0xF5AD
+VAR2 lvl1R6 0x85A1
+VAR2 lvl1R7 0xFFFF
+
+VAR2 lvl2R0 0xFFFF
+VAR2 lvl2R1 0x8001
+VAR2 lvl2R2 0xBFFD
+VAR2 lvl2R3 0xA7E5
+VAR2 lvl2R4 0xA7E5
+VAR2 lvl2R5 0xBFFD
+VAR2 lvl2R6 0x8001
+VAR2 lvl2R7 0xFFFF
+
+VAR2 lvl3R0 0xFFFF
+VAR2 lvl3R1 0xFFFF
+VAR2 lvl3R2 0xFFFF
+VAR2 lvl3R3 0xFFFF
+VAR2 lvl3R4 0xFFFF
+VAR2 lvl3R5 0xFFFF
+VAR2 lvl3R6 0xFFFF
+VAR2 lvl3R7 0xFFFF
+
+//Player
+VAR1 lives 0x3F
+VAR2 paddleX 472
+VAR2 paddleXReset 472
+VAR2 paddleWidth 13 //= TrueWidth - 1
+VAR2 paddleSpd 11
+VAR2 paddleMaxX 0
+
+//Ball
+VAR2 ballX 504
+VAR2 ballXReset 504
+VAR2 ballY 432
+VAR2 ballYReset 432
+VAR2 spdX 4
+VAR2 spdY 7
+VAR2 spdTemp 0
+VAR1 dirX 0xFF
+VAR1 dirY 0xFF
+VAR2 ballCollisionRow 0
+
+//Brick creation
+VAR2 brickVRAMAddr 0
+VAR2 brickGenNum 0
+VAR1 brickGenXRepeat 0
+VAR1 brickGenYRepeat 0
+
+//Game
+VAR1 started 0
+
+//Levels and drawing
+VAR2 lvlOffset 0
+VAR2 checkCell 0
+VAR2 brickDrawAddr 0
+VAR2 bricksAlive 0
+VAR2 rowAddress 0
+VAR1 lvlsCompleted 0
+
+//Exponent Look-Up table
+VAR2 expLut0 0x8000
+VAR2 expLut1 0x4000
+VAR2 expLut2 0x2000
+VAR2 expLut3 0x1000
+VAR2 expLut4 0x0800
+VAR2 expLut5 0x0400
+VAR2 expLut6 0x0200
+VAR2 expLut7 0x0100
+VAR2 expLut8 0x0080
+VAR2 expLut9 0x0040
+VAR2 expLut10 0x0020
+VAR2 expLut11 0x0010
+VAR2 expLut12 0x0008
+VAR2 expLut13 0x0004
+VAR2 expLut14 0x0002
+VAR2 expLut15 0x0001
+
+//Init Display
+LDDI 999
+SMT
+WMT
+SMT
+CPY MM_CLKPRE clkspd
+GDT3 gINI 0 0
+GPU
+GDT3 gSNF 0 0
+GPU
+WMT
+
+LDAI 127
+SUB paddleWidth
+MULI 8
+RDA paddleMaxX
+
+//Load VRAM with bricks
+LDA brickVRAMAddr (loopBrickGenX)
+RDA *p0x+1
+ADDI 2
+RDA *p1x+1
+ADDI 2
+RDA *p2x+1
+ADDI 2
+RDA *p3x+1
+ADDI 2
+RDA *p4x+1
+ADDI 2
+RDA brickVRAMAddr
+LDA brickGenNum
+RDA *p0x+3
+RDA *p3x+3
+RDA *p4x+3
+ADDI 7
+RDA *p1x+3
+RDA *p2x+3
+ADDI 1
+LDDI 128
+JPL *saveBrickGenNum
+LDAI 0
+RDA brickGenNum (saveBrickGenNum)
+GDT3 gLDI 0 0 (p0x)
+GPU
+GDT3 gLDI 2 8 (p1x)
+GPU
+GDT3 gLDI 4 8 (p2x)
+GPU
+GDT3 gLDI 6 8 (p3x)
+GPU
+GDT3 gLDI 8 8 (p4x)
+GPU
+SHM
+LDA brickGenXRepeat
+ADDI 1
+RDA brickGenXRepeat
+LDDI 128
+SFM
+JPE *startBrickGenY
+JMP *loopBrickGenX
+
+CPY brickGenXRepeat CONST_ZERO (startBrickGenY)
+LDAI 8
+RDA brickGenNum 
+LDAI 1
+RDA brickVRAMAddr
+LDA brickVRAMAddr (loopBrickGenY)
+RDA *p0y+1
+ADDI 2
+RDA *p1y+1
+ADDI 2
+RDA *p2y+1
+ADDI 2
+RDA *p3y+1
+ADDI 2
+RDA *p4y+1
+ADDI 2
+RDA brickVRAMAddr
+LDA brickGenNum
+RDA *p0y+3
+RDA *p1y+3
+RDA *p4y+3
+ADDI 3
+RDA *p2y+3
+RDA *p3y+3
+SHM
+LDA brickGenXRepeat
+ADDI 1
+RDA brickGenXRepeat
+LDDI 16
+SFM
+JPL *p0y
+CPY brickGenXRepeat CONST_ZERO
+LDA brickGenNum
+ADDI 4
+RDA brickGenNum
+GDT3 gLDI 1 0 (p0y)
+GPU
+GDT3 gLDI 3 0 (p1y)
+GPU
+GDT3 gLDI 5 0 (p2y)
+GPU
+GDT3 gLDI 7 0 (p3y)
+GPU
+GDT3 gLDI 9 0 (p4y)
+GPU
+SHM
+LDA brickGenYRepeat
+ADDI 1
+RDA brickGenYRepeat
+LDDI 128
+SFM
+JPE *drawFirstFrame
+JMP *loopBrickGenY
+
+//Wait for start
+SHM (mainLoopStart)
+LDA started
+ORB MM_BUTTON
+RDA started
+SFM
+JPZ *mainLoopStart
+
+//Paddle Movement
+SHM (drawFirstFrame)
+LDA MM_BUTTON //Rightwards movement
+ANDI 16
+SFM
+JPZ *checkNextButton
+LDA paddleX
+ADD paddleSpd
+LDD paddleMaxX
+JPG *checkNextButton
+RDA paddleX
+SHM (checkNextButton)
+LDA MM_BUTTON //Leftwards movement
+ANDI 32
+SFM
+JPZ *ballXMovement
+LDA paddleX
+SUB paddleSpd
+JPC *ballXMovement
+RDA paddleX
+
+//Ball X movement and wall collision
+SHM (ballXMovement)
+LDA dirX
+SFM
+LDDI 0
+JPE *ballMovingRight
+LDA ballX //Moving left
+SUB spdX
+JPC *bounceX //Collision on left wall
+RDA ballX
+JMP *ballYMovement
+LDA ballX (ballMovingRight)
+ADD spdX
+LDDI 1015 //Collision on right wall
+JPG *bounceX 
+RDA ballX
+JMP *ballYMovement
+
+SHM (bounceX)
+LDA dirX
+XORBI 1
+RDA dirX
+SFM
+
+//Ball Y movement and wall/paddle collision
+SHM (ballYMovement)
+LDA dirY
+SFM
+LDDI 0
+JPE *ballMovingDown
+LDA ballY //Moving up
+SUB spdY
+JPC *bounceY //Collision on ceiling
+RDA ballY
+JMP *ballBrickCollision
+LDA ballY (ballMovingDown)
+ADD spdY
+ATB
+LDDI 480
+JPL *missedPaddle
+LDDI 487
+JPG *missedPaddle
+LDA paddleX
+SUBI 8
+JPC *setToZero
+JMP *sendToD
+LDAI 0 (setToZero)
+ATD (sendToD)
+LDA ballX
+JPL *missedPaddle
+LDA paddleWidth
+ADDI 1
+MULI 8
+ADD paddleX
+ATD
+LDA ballX
+JPG *missedPaddle
+JMP *bounceY
+BTA (missedPaddle)
+RDA ballY
+JMP *ballBrickCollision
+
+SHM (bounceY)
+LDA dirY
+XORBI 1
+RDA dirY
+SFM
+
+// Ball brick collision
+LDA ballY (ballBrickCollision)
+RSHFT
+RSHFT
+RSHFT
+SUBI 6 //Removing brick offset
+RSHFT
+RSHFT //Doubled because of addition to address of 2B values
+LSHFT //Ensures even value
+ADDI lvlR0
+LDDI lvlR7
+JPG *checkBounds //restrict access to row data only
+RDA *levelToLoad+0
+RDA rowAddress
+LDA 0 (levelToLoad)
+RDA ballCollisionRow
+
+LDA ballX
+RSHFT
+RSHFT
+RSHFT
+RSHFT
+RSHFT
+RSHFT
+LSHFT //Ensures even value
+ADDI expLut0
+RDA *loadLUT+0
+LDA 0 (loadLUT)
+ATB
+AND ballCollisionRow
+JPZ *checkBounds //There is no brick
+LDA rowAddress //There is a brick
+RDA *rowToEdit+0
+RDA *saveRow+0
+BTA
+NOT
+AND 0 (rowToEdit)
+RDA 0 (saveRow)
+
+//Bounce on brick
+LDA spdX
+LDD spdY
+JPG *flipYDir
+SHM
+LDA dirX
+XORBI 1
+RDA dirX
+SFM
+JMP *flipSpeeds
+SHM (flipYDir)
+LDA dirY
+XORBI 1
+RDA dirY
+SFM
+CPY2 spdTemp spdX (flipSpeeds)
+CPY2 spdX spdY
+CPY2 spdY spdTemp
+
+//Check ball boundaries
+LDA ballY (checkBounds)
+LDDI 768
+JPL *startDraw
+LDA ballYReset
+RDA ballY
+LDA paddleWidth
+ADDI 1
+MULI 4
+ADD paddleX
+RDA ballX
+SHM
+LDAI 1
+RDA dirY
+LDA lives
+RSHFT
+RDA lives
+SFM
+JPZ *noMoreLives
+
+//Drawing bricks
+LDAI 0 (startDraw) //Reset to 0
+RDA brickDrawAddr
+RDA lvlOffset
+RDA bricksAlive
+LDAI lvlR0 (loadRowStart)
+ADD lvlOffset
+RDA *levelLoader+0
+LDAI 0x8000
+RDA checkCell
+LDA lvlR0 (levelLoader)
+ATB
+AND checkCell (drawLoop)
+JPZ *skipDraw
+LDA brickDrawAddr
+RDA *drawBrick+1
+ADDI 2
+RDA *drawBrick+5
+GDT7 gDRL 0 0 0 2 2 3 (drawBrick)
+GPU
+LDA bricksAlive
+ADDI 1
+RDA bricksAlive
+LDA brickDrawAddr (skipDraw)
+ADDI 10
+RDA brickDrawAddr
+LDA checkCell
+RSHFT
+JPZ *nextRow
+RDA checkCell
+BTA
+JMP *drawLoop
+
+LDA lvlOffset (nextRow)
+ADDI 2
+LDDI 16
+JPE *checkLvlStatus
+RDA lvlOffset
+JMP *loadRowStart
+
+LDA bricksAlive (checkLvlStatus)
+LDDI 0
+JPE *nextLevel
+
+//Drawing the paddle
+LDA paddleX
+RSHFT
+RSHFT
+RSHFT
+RDA *paddleCoord0+3
+ADD paddleWidth
+RDA *paddleCoord1+3
+GDT3 gLDI 1280 0 (paddleCoord0)
+GPU
+GDT3 gLDI 1281 60
+GPU
+GDT3 gLDI 1282 0 (paddleCoord1)
+GPU
+GDT3 gLDI 1283 60
+GPU
+GDT7 gDRL 1280 0 1282 0 0 0
+GPU 
+
+//Drawing Ball
+LDA ballX
+RSHFT
+RSHFT
+RSHFT
+RDA *BL_coordX+3
+RDA *TL_coordX+3
+ADDI 1
+RDA *BR_coordX+3
+RDA *TR_coordX+3
+LDA ballY
+RSHFT
+RSHFT
+RSHFT
+LDDI 62
+JPG *skipBallDraw
+RDA *BL_coordY+3
+RDA *BR_coordY+3
+ADDI 1
+RDA *TL_coordY+3
+RDA *TR_coordY+3
+GDT3 gLDI 1284 0 (BL_coordX) //Bottom Left
+GPU
+GDT3 gLDI 1285 0 (BL_coordY)
+GPU
+GDT3 gLDI 1286 0 (BR_coordX) //Bottom Right
+GPU
+GDT3 gLDI 1287 0 (BR_coordY)
+GPU
+GDT3 gLDI 1288 0 (TL_coordX) //Top Left
+GPU
+GDT3 gLDI 1289 0 (TL_coordY)
+GPU
+GDT3 gLDI 1290 0 (TR_coordX) //Top Right
+GPU
+GDT3 gLDI 1291 0 (TR_coordY)
+GPU
+GDT7 gDRP 1284 0 0 2 2 3 //Draw ball (2x2)
+GPU
+
+//Settings LEDS
+CPY MM_LEDS lives (skipBallDraw)
+
+//Waiting for frame timer and sending frame
+WFT
+GDT3 gSNF 0 0
+GPU
+JMP *mainLoopStart
+
+SMT (nextLevel)
+GDT3 gSNF 0 0
+GPU
+SHM
+LDAI 0xFF
+RDA dirX
+RDA dirY
+LDA lvlsCompleted
+ADDI 1
+RDA lvlsCompleted
+SFM
+LDDI 1
+JPE *loadLvl2
+LDDI 2
+JPE *loadLvl3
+CPY lvlsCompleted CONST_ZERO
+LDAI lvl1R0
+JMP *loadNextLvl
+LDAI lvl2R0 (loadLvl2)
+JMP *loadNextLvl
+LDAI lvl3R0 (loadLvl3)
+RDA *nextLvlR0+2 (loadNextLvl)
+ADDI 2
+RDA *nextLvlR1+2
+ADDI 2
+RDA *nextLvlR2+2
+ADDI 2
+RDA *nextLvlR3+2
+ADDI 2
+RDA *nextLvlR4+2
+ADDI 2
+RDA *nextLvlR5+2
+ADDI 2
+RDA *nextLvlR6+2
+ADDI 2
+RDA *nextLvlR7+2
+
+CPY2 lvlR0 0 (nextLvlR0)
+CPY2 lvlR1 0 (nextLvlR1)
+CPY2 lvlR2 0 (nextLvlR2)
+CPY2 lvlR3 0 (nextLvlR3)
+CPY2 lvlR4 0 (nextLvlR4)
+CPY2 lvlR5 0 (nextLvlR5)
+CPY2 lvlR6 0 (nextLvlR6)
+CPY2 lvlR7 0 (nextLvlR7)
+
+WMT //Waits 1sec before restart
+JMP *restartSkipLifeReset
+
+SHM (noMoreLives) //Restarts game
+LDAI 0x3F
+RDA lives
+SFM
+CPY lvlsCompleted CONST_ZERO
+CPY2 lvlR0 lvl1R0
+CPY2 lvlR1 lvl1R1
+CPY2 lvlR2 lvl1R2
+CPY2 lvlR3 lvl1R3
+CPY2 lvlR4 lvl1R4
+CPY2 lvlR5 lvl1R5
+CPY2 lvlR6 lvl1R6
+CPY2 lvlR7 lvl1R7
+CPY started CONST_ZERO (restartSkipLifeReset)
+CPY2 ballX ballXReset
+CPY2 ballY ballYReset
+CPY2 paddleX paddleXReset
+JMP *drawFirstFrame
