@@ -1,3 +1,4 @@
+# Simple assembler version 2.0.1
 # Assembles simple assembly files into machine code
 # into a .mi file needed by the Gowin bsram init menu.
 # RAM settings:
@@ -37,12 +38,13 @@ class Opcode:
                              #Things like GDTx and CPYx are not included as these are half mode independent
             
 class Var:
-    def __init__(self, name, initialValue, width, address = -1, atf = True):
+    def __init__(self, name, initialValue, width, address = -1, atf = True, buffer = False):
         self.name = name
         self.val = initialValue
         self.addr = address
         self.addToFile = atf
         self.width = width
+        self.buffer = buffer
 
 class Alias:
     def __init__(self, name, address):
@@ -344,9 +346,9 @@ for line in lines:
                 arg = arg.replace("(", "").replace(")", "")
                
                 if inVars(arg, variables) == -1 and inAliases(arg, aliases) == -1:
-                    aliases.append(Alias(arg, len(firstPass) - (width + 1)))
+                    aliases.append(Alias(arg, len(firstPass) - (width + 1) + programOffset))
                 else:
-                    error("ERROR: Alias (or variable) " + arg + " already exists")
+                    error("ERROR: Identifier (" + arg + ") already exists")
 
             elif inVars(arg, variables) != -1 :
                 if debug:
@@ -357,31 +359,37 @@ for line in lines:
 
             else:
                 if debug:
-                    print("Found reference to possible variable (" + arg + ") on line " + str(lineNum))
+                    print("Found reference to possible variable/buffer (" + arg + ") on line " + str(lineNum))
                 firstPass.append('v:' + arg)
                 firstPass.append("^^^")
                 varHalfError(opInstruction, arg, lineNum, halfMode)
                 
-    elif operation[:3] == "VAR":
-        args = scanForArguments(line, 2, "VAR")
+    elif operation[:3] == "VAR" or operation == "BUF":
+        isBuffer = (operation == "BUF")
+        args = scanForArguments(line, 2, ("BUFFER" if isBuffer else "VARIABLE"))
         
         try:
-            newVar = Var(args[0], args[1], int(operation[3]))
+            newVar = Var(args[0], 
+                (0 if isBuffer else args[1]), 
+                (int(args[1]) if isBuffer else int(operation[3])), 
+                buffer = isBuffer)
+                
             if inVars(newVar.name, variables) == -1 and inAliases(newVar.name, aliases) == -1:
                 variables.append(newVar)
             else:
-                error("ERROR: Variable (or alias) " + newVar.name + " already exists")
+                error("ERROR: Identifier (" + newVar.name + ") already exists")
             
-            if int(operation[3]) == 1 and "." in args[1]:
-                error("ERROR: Floating point value assigned to single byte for variable " + newVar.name)
-                
-            if int(operation[3]) > 2:
-                error("ERROR: Size too large for variable " + newVar.name)
+            if not isBuffer:
+                if int(operation[3]) == 1 and "." in args[1]:
+                    error("ERROR: Floating point value assigned to single byte for variable " + newVar.name)
+                    
+                if int(operation[3]) > 2:
+                    error("ERROR: Size too large for variable " + newVar.name)
         except:
-            error("ERROR: Cannot read size for variable on line " + str(lineNum))
+            error("ERROR: Cannot read size for variable or width of buffer on line " + str(lineNum))
         
         if debug:
-            print("Found variable declaration (" + args[0] + ") on line " + str(lineNum))
+            print("Found variable/buffer declaration (" + args[0] + ") on line " + str(lineNum))
     elif operation.replace(" ", "") == "":
         continue
     else:
@@ -399,12 +407,15 @@ lastOpIndex = 0
 
 for v in variables:   
     try:
-        v.val = numToHex(v.val, (v.width == 1), "VARIABLE CHECK")
+        if v.buffer:
+            v.val = "00"
+        else:
+            v.val = numToHex(v.val, (v.width == 1), "VARIABLE CHECK")
     except:
-        error("ERROR: Cannot parse initial value (" + v.val + ") for variable " + v.name)
+        error("ERROR: Cannot parse initial value (" + str(v.val) + ") for variable " + v.name)
     
     if v.addr == -1:
-        v.addr = int16ToHex(progLength + 1)
+        v.addr = int16ToHex(progLength + 1 + programOffset)
         progLength += v.width
     else:
         v.addr = int16ToHex(v.addr, "VARIABLE CHECK")
@@ -447,7 +458,7 @@ for line in firstPass:
         else:
             error("ERROR: Unknown alias (" + aliasName + ") found during second pass")
 
-        addressData = int16ToHex(a.addr + argOffset, "SECOND PASS")
+        addressData = int16ToHex(a.addr + argOffset + programOffset, "SECOND PASS")
         secondPass.append(addressData[2:4])
         secondPass.append(addressData[0:2])
     elif line == "^^^":
@@ -467,8 +478,14 @@ for line in firstPass:
         secondPass.append(line)
         
 for v in variables:
-    if v.addToFile:
-        secondPass += v.val;
+    if v.addToFile: 
+        if v.buffer:
+            buffer = []
+            for i in range(0, v.width):
+                buffer += ["00"]
+            secondPass += buffer
+        else:
+            secondPass += v.val;
  
 if debug:
     print("\nSecond Pass Results:")
