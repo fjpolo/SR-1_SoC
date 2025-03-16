@@ -1,4 +1,4 @@
-# Simple assembler version 2.0.1
+# Simple assembler version 2.0.2
 # Assembles simple assembly files into machine code
 # into a .mi file needed by the Gowin bsram init menu.
 # RAM settings:
@@ -22,7 +22,7 @@ lineNum = 0
 failed = False
 errors = 0
 warnings = 0
-programOffset = 0
+programOffset = 100
 
 #Opcode
 class Opcode:
@@ -286,13 +286,20 @@ variables = [Var("MM_CLKPRE", "0", 1, 32767, False),
              Var("MM_BUTTON", "0", 1, 32752, False),
              Var("MM_WIDE", "0", 2, 32750, False),
              Var("MM_THIN", "0", 1, 32749, False),
+             Var("MM_D", "0", 2, 32747, False),
+             Var("MM_C", "0", 2, 32745, False),
+             Var("MM_B", "0", 2, 32743, False),
+             Var("MM_A_H", "0", 1, 32742, False),
+             Var("MM_A_L", "0", 1, 32741, False),
              Var("MM_DD4", "0", 1, 32740, False),
-             Var("MM_DD3", "0", 1, 32739, False), #Bit masks omitted as useless
+             Var("MM_DD3", "0", 1, 32739, False),
              Var("MM_DD2", "0", 1, 32738, False),
              Var("MM_DD1", "0", 1, 32737, False),
              Var("MM_DD0", "0", 1, 32736, False),
              Var("MM_LEDS", "0", 1, 32735, False),
-             Var("CONST_ZERO", "0", 1, 0, False)]
+             Var("CONST_ZERO", "0", 2, 0, False)]
+
+programOffset += 1; #First 2 addresses are zero for CONST_ZERO Variable
 
 for line in lines:
     lineNum += 1
@@ -458,7 +465,7 @@ for line in firstPass:
         else:
             error("ERROR: Unknown alias (" + aliasName + ") found during second pass")
 
-        addressData = int16ToHex(a.addr + argOffset + programOffset, "SECOND PASS")
+        addressData = int16ToHex(a.addr + argOffset, "SECOND PASS")
         secondPass.append(addressData[2:4])
         secondPass.append(addressData[0:2])
     elif line == "^^^":
@@ -498,7 +505,7 @@ thirdPass = ["#File_format=AddrHex", "#Address_depth=32768", "#Data_width=8"]
 
 for line in secondPass:
     iteration = iteration + 1
-    thirdPass.append(hex(iteration).replace("0x", "") + ":" + line);
+    thirdPass.append(hex(iteration + programOffset).replace("0x", "") + ":" + line);
         
 if debug:
     print("Third Pass Results:")

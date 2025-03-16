@@ -1,7 +1,7 @@
 module RAM (output logic [15:0] db_out, gpu_cpu_data, gpu_pca, gpu_pcb,
 		output logic [7:0] clk_pre, gpu_repeat, gpu_pcai, gpu_pcbi, gpu_instr, display_leds,
 		output logic dual_operation,
-		input logic [15:0] data_bus, wide_sw, gpu_data_out, gpu_fp2i,
+		input logic [15:0] data_bus, wide_sw, gpu_data_out, gpu_fp2i, reg_a, reg_b, reg_c, reg_d,
 		input logic [7:0] thin_sw, buttons, double_dabble [5],
 		input logic clk, reset, half_mode, read, write, set_address, set_transfer_addr, data_transfer, set_xfer_gpu, read_as_address, override_dual_op);
 	
@@ -12,12 +12,12 @@ module RAM (output logic [15:0] db_out, gpu_cpu_data, gpu_pca, gpu_pcb,
 	logic use_memory_map_a, use_memory_map_b, wra, wrb, rda, rdb;
 	
 	//Data bus connections
-	logic [15:0] dbo_bm [8], dbo_dubdab [5], dbo_ts, dbo_wsl, dbo_wsh, dbo_btn, dbo_gfl, 
-	dbo_gfh, dbo_gdl, dbo_gdh, dbo_gin, dbo_gal, dbo_gah, dbo_gcdl, dbo_gcdh,
+	logic [15:0] dbo_rega_sl, dbo_rega_sh, dbo_regbl, dbo_regbh, dbo_regcl, dbo_regch, dbo_regdl, dbo_regdh, dbo_dubdab [5], dbo_ts, 
+    dbo_wsl, dbo_wsh, dbo_btn, dbo_gfl, dbo_gfh, dbo_gdl, dbo_gdh, dbo_gin, dbo_gal, dbo_gah, dbo_gcdl, dbo_gcdh,
 	dbo_gbl, dbo_gbh, dbo_gpai, dbo_gpbi, dbo_gra, dbo_ccs, dbo_douta, dbo_doutb, dbo_doutt, dbo_leds;
 	
 	assign db_out = (dbo_dubdab[0] | dbo_dubdab[1] | dbo_dubdab[2] | dbo_dubdab[3] | dbo_dubdab[4] | dbo_leds |
-	dbo_bm[0] | dbo_bm[1] | dbo_bm[2] | dbo_bm[3] | dbo_bm[4] | dbo_bm[5] | dbo_bm[6] | dbo_bm[7] | 
+	dbo_rega_sl | dbo_rega_sh | dbo_regbl | dbo_regbh | dbo_regcl | dbo_regch | dbo_regdl | dbo_regdh |
 	dbo_ts | dbo_wsl | dbo_wsh | dbo_btn | dbo_gfl | dbo_gfh | dbo_gdl | dbo_gdh | dbo_gin | dbo_gal | dbo_gah | 
 	dbo_gcdl | dbo_gcdh | dbo_gbl | dbo_gbh | dbo_gpai | dbo_gpbi | dbo_gra | dbo_ccs | dbo_douta | dbo_doutb | dbo_doutt);
 	
@@ -163,89 +163,92 @@ module RAM (output logic [15:0] db_out, gpu_cpu_data, gpu_pca, gpu_pcb,
 		.reset(reset)
 	);
 	
-	//Bit masks (from pin 0 to pin 7)
-	RO_Byte #(.ADDRESS(15'h7FE5)) bm0 (
-		.db_out(dbo_bm[0]),
+	//Reg A (for splitting 2B into 2x1B)
+	RO_Byte #(.ADDRESS(15'h7FE5)) reg_a_split_low (
+		.db_out(dbo_rega_sl),
 		.address_a(address),
 		.address_b(addr_b),
-		.value(8'b00000001),
+		.value(reg_a[7:0]),
 		.read_a(rda),
 		.read_b(rdb),
 		.clk(clk),
 		.reset(reset)
 	);
 	
-	RO_Byte #(.ADDRESS(15'h7FE6)) bm1 (
-		.db_out(dbo_bm[1]),
+	RO_Byte #(.ADDRESS(15'h7FE6)) reg_a_split_high (
+		.db_out(dbo_rega_sh),
 		.address_a(address),
 		.address_b(addr_b),
-		.value(8'b00000010),
+		.value(reg_a[15:8]),
 		.read_a(rda),
 		.read_b(rdb),
 		.clk(clk),
 		.reset(reset)
 	);
 	
-	RO_Byte #(.ADDRESS(15'h7FE7)) bm2 (
-		.db_out(dbo_bm[2]),
+    //Reg B (for A to B operations)
+	RO_Byte #(.ADDRESS(15'h7FE7)) reg_b_low (
+		.db_out(dbo_regbl),
 		.address_a(address),
 		.address_b(addr_b),
-		.value(8'b00000100),
+		.value(reg_b[7:0]),
 		.read_a(rda),
 		.read_b(rdb),
 		.clk(clk),
 		.reset(reset)
 	);
 	
-	RO_Byte #(.ADDRESS(15'h7FE8)) bm3 (
-		.db_out(dbo_bm[3]),
+	RO_Byte #(.ADDRESS(15'h7FE8)) reg_b_high (
+		.db_out(dbo_regbh),
 		.address_a(address),
 		.address_b(addr_b),
-		.value(8'b00001000),
+		.value(reg_b[15:8]),
 		.read_a(rda),
 		.read_b(rdb),
 		.clk(clk),
 		.reset(reset)
 	);
 	
-	RO_Byte #(.ADDRESS(15'h7FE9)) bm4 (
-		.db_out(dbo_bm[4]),
+    //Reg C (for A to C operations)
+	RO_Byte #(.ADDRESS(15'h7FE9)) reg_c_low (
+		.db_out(dbo_regcl),
 		.address_a(address),
 		.address_b(addr_b),
-		.value(8'b00010000),
+		.value(reg_c[7:0]),
 		.read_a(rda),
 		.read_b(rdb),
 		.clk(clk),
 		.reset(reset)
 	);
 	
-	RO_Byte #(.ADDRESS(15'h7FEA)) bm5 (
-		.db_out(dbo_bm[5]),
+	RO_Byte #(.ADDRESS(15'h7FEA)) reg_c_high (
+		.db_out(dbo_regch),
 		.address_a(address),
 		.address_b(addr_b),
-		.value(8'b00100000),
+		.value(reg_c[15:8]),
 		.read_a(rda),
 		.read_b(rdb),
 		.clk(clk),
 		.reset(reset)
 	);
 	
-	RO_Byte #(.ADDRESS(15'h7FEB)) bm6 (
-		.db_out(dbo_bm[6]),
+    //Reg D (for A to D operations)
+	RO_Byte #(.ADDRESS(15'h7FEB)) reg_d_low (
+		.db_out(dbo_regdl),
 		.address_a(address),
 		.address_b(addr_b),
-		.value(8'b01000000),
+		.value(reg_d[7:0]),
 		.read_a(rda),
 		.read_b(rdb),
 		.clk(clk),
 		.reset(reset)
 	);
 	
-	RO_Byte #(.ADDRESS(15'h7FEC)) bm7 (
-		.db_out(dbo_bm[7]),
+	RO_Byte #(.ADDRESS(15'h7FEC)) reg_d_high (
+		.db_out(dbo_regdh),
 		.address_a(address),
 		.address_b(addr_b),
-		.value(8'b10000000),
+		.value(reg_d[15:8]),
 		.read_a(rda),
 		.read_b(rdb),
 		.clk(clk),

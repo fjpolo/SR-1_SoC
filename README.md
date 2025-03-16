@@ -34,9 +34,6 @@ For more info see the docs (Not made yet)
 ## CPU Opcodes
 <img src="Images/cpu_opcodes.png" alt="CPU Opcode Table">
 
-## RAM Memory Mappings
-<img src="Images/RAM_MM.png" alt="RAM Memory Mapping Table">
-
 ## GPU Block Diagram
 <img src="Images/gpu_block.png" alt="GPU Block Diagram">
 

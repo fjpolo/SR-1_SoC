@@ -169,7 +169,11 @@ module CPU16(output logic [5:0] n_leds, debug,
 		.data_transfer(ram_dtransfer),
 		.set_xfer_gpu(ram_set_xfer_gpu),
 		.read_as_address(ram_rd_as_addr),
-		.override_dual_op(half_mode_override)
+		.override_dual_op(half_mode_override),
+        .reg_a(reg_a),
+        .reg_b(reg_b),
+        .reg_c(reg_c),
+        .reg_d(reg_d)
 	);
 	
 	assign n_leds = ~display_leds[5:0];
