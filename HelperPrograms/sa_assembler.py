@@ -22,7 +22,7 @@ lineNum = 0
 failed = False
 errors = 0
 warnings = 0
-programOffset = 100
+programOffset = 0
 
 #Opcode
 class Opcode:
@@ -257,8 +257,6 @@ while not enteredFile:
     
     try:
         progFile = open(filename, 'r')
-        if not noFileOut:
-            assmFile = open(assmFilename, 'w')
         enteredFile = True
     except:
         print("ERROR: INVALID FILENAME") #Not a failure error, so normal print used
@@ -528,6 +526,7 @@ else:
         print("No File Output mode on, nothing saved")
     else:
         print("Saving at: " + assmFilename)
+        assmFile = open(assmFilename, 'w')
         
         for line in thirdPass:
             assmFile.write(line + "\n");
