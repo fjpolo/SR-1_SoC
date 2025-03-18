@@ -34,7 +34,7 @@ module ALU (output logic [15:0] sum,
 	
 		//Addition/Subtraction
 		if (subtract) internal_sum = a_internal - b_internal;
-		else if (mult) internal_sum = mult_out[15:0];
+		else if (mult) internal_sum = mult_out[16:0];
 		else if (alu_and) internal_sum = a_internal & b_internal;
 		else if (alu_or) internal_sum = a_internal | b_internal;
 		else if (alu_xor) internal_sum = a_internal ^ b_internal;
