@@ -1,0 +1,11 @@
+VAR1 bitmask 1
+
+LDDI 999
+SMT (loopStart)
+SHM
+LDA MM_LEDS
+XOR bitmask
+RDA MM_LEDS
+SFM
+WMT
+JMP *loopStart
