@@ -16,7 +16,7 @@ The parameters to do so are as follows:
 - Data Width:		8 (for both ports)
 - Read Mode: 		Bypass
 - Write Mode:		Normal
-- Reset Mode:		Asynchronous
+- Reset Mode:		Asynchronous  
 However there is also a [AutoHotKey](HelperPrograms/BSRAM_Instantiate.ahk) script to automate the entry of these fields as it gets very tedious very fast.
 
 ## Synthesis
