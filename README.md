@@ -9,7 +9,7 @@ This project is licensed under the **Creative Commons Attribution-NonCommercial 
 See the [LICENSE](LICENSE) file for more details, especially regarding media, as this is not covered under the above license.
 
 ## Programming
-To program the system, you must first create a .mi file and then recreate the [DP_BSRAM8 file](CPU/Memory/gowin_dpb/dp_bsram8.v)  
+You can use the custom simple assembly language to create a .sa file, which can then be [assembled](HelperPrograms/sa_assembler.py) into a .mi file for recreating the [DP_BSRAM8 file](CPU/Memory/gowin_dpb/dp_bsram8.v)  
 The parameters to do so are as follows:
 - Module Name: 	    DP_BSRAM8
 - Address Depth:	32768 (for both ports)
@@ -17,6 +17,7 @@ The parameters to do so are as follows:
 - Read Mode: 		Bypass
 - Write Mode:		Normal
 - Reset Mode:		Asynchronous
+However there is also a [AutoHotKey](HelperPrograms/BSRAM_Instantiate.ahk) script to automate the entry of these fields as it gets very tedious very fast.
 
 ## Synthesis
 This SoC was synthesised onto a [Sipeed Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html).  
