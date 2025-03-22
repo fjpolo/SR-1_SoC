@@ -24,23 +24,14 @@ This SoC was synthesised onto a [Sipeed Tang Nano 9k](https://wiki.sipeed.com/ha
 I put it onto a breadboard to connect all the IO, as seen below.
 <img src="Images/physical_circuit.jpg" alt="Physical circuit on a breadboard">
 
-## CPU Block Diagram
-For more info see the docs (Not made yet)  
+## Assembly Documentation
+I have written an extensive document on how to use the system's custom assembly language, called [Simple Assembly](HelperPrograms/Assembler.pdf)
 
+## CPU Block Diagram 
 <img src="Images/cpu_block.png" alt="CPU Block Diagram">
-
-## CPU Registers
-<img src="Images/regs.png" alt="CPU Register Uses">
-
-## CPU Opcodes
-<img src="Images/cpu_opcodes.png" alt="CPU Opcode Table">
 
 ## GPU Block Diagram
 <img src="Images/gpu_block.png" alt="GPU Block Diagram">
 
-## GPU Opcodes
-<img src="Images/gpu_opcodes.png" alt="GPU Opcode Table">
-
 ## Synthesised Chip Array
 <img src="Images/ChipArray_v3_large.png" alt="Chip Array Diagram">
-Just because it is so beautiful!
