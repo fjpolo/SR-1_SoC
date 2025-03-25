@@ -4,7 +4,7 @@ import MicrocodePackage::*;
 module CPU16(output logic [5:0] n_leds, debug,
 		output logic SCL, SDA_OUT, debug_single,
 		input logic [7:0] n_wide_sw_hi, n_wide_sw_lo, n_thin_sw,
-		input logic clk_in, n_reset, SDA_IN, n_enter_btn, n_l_btn, n_r_btn, n_t_btn, n_b_btn, n_p0_btn, n_p1_btn);
+		input logic clk_in, n_reset, n_enter_btn, n_l_btn, n_r_btn, n_t_btn, n_b_btn, n_p0_btn, n_p1_btn, n_c0_btn);
 	
 	logic [15:0] data_bus;
 	logic [7:0] buttons;
@@ -17,7 +17,7 @@ module CPU16(output logic [5:0] n_leds, debug,
 	//assign debug[2] = '1;
 
 	assign reset = ~n_reset; //Active low
-	assign buttons = {1'd0, 
+	assign buttons = {~n_c0_btn,    //Active low
 					~n_enter_btn,	//Active low
 					~n_l_btn,		//Active low
 					~n_r_btn,		//Active low
@@ -234,7 +234,7 @@ module CPU16(output logic [5:0] n_leds, debug,
 		.clk(clk),
 		.clk_hs(clk_in),
 		.reset(reset), 
-		.SDA_IN(SDA_IN), 
+		.SDA_IN('0), 
 		.gpu_start(gpu_start)
 	);
 	
