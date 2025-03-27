@@ -23,8 +23,8 @@ module CPU16(output logic [5:0] n_leds, debug,
 					~n_r_btn,		//Active low
 					~n_t_btn,		//Active low
 					~n_b_btn,		//Active low
-					~n_p0_btn,		//Active low
-					~n_p1_btn};		//Active low
+					~n_p1_btn,		//Active low
+					~n_p0_btn};		//Active low
 
 	//Registers
 	logic [15:0] reg_a, reg_b, reg_c, reg_d, dbo_ra, dbo_rb, dbo_rc, dbo_rd, alu_output;
