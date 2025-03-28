@@ -1,4 +1,4 @@
-# Simple assembler version 2.0.3
+# Simple assembler version 2.0.4
 # Assembles simple assembly files into machine code
 # into a .mi file needed by the Gowin bsram init menu.
 # RAM settings:
@@ -72,11 +72,14 @@ class Alias:
         self.name = name
         self.addr = address
         
-#Opcode list
-opcodes = []
-
+#Configuration
+opcodes = [] #In config file
+configFiles = {}
+mostRecentConfigVersion = 0
+configFolderPath = "Config"
+versionExpandConstant = 10000 #Allows versions up to like so XXXX.YYYY.ZZZZ
 gpuOpcodes = ["gNXI", "gLDC", "gLDI", "gSDC", "gLMV", "gMM2", "gMM4", 
-        "gDRL", "gDRP", "gMA2", "gSCO", "gSCI", "gINI", "gSNF", "gCPY"]
+        "gDRL", "gDRP", "gMA2", "gSCO", "gSCI", "gINI", "gSNF", "gCPY"] #Will be added to config file later
         
 gpuArgWidths = [2,2,2,1,1,1] ##Ignores first byte
 
@@ -117,7 +120,7 @@ def printList(list):
     
 def extractOperation(line):
     op = ""
-    for char in line:
+    for char in line.lstrip():
         if (char != ' ') and (char != '\n') and (char != '/'):
             op = op + char
         else:
@@ -128,7 +131,7 @@ def inOpcodes(name):
     index = 0
     for opcode in opcodes:
         if opcode.name == name:
-            return opcode.index
+            return index
         index += 1
     return -1
     
@@ -148,7 +151,7 @@ def inAliases(name, aliases):
         index += 1
     return -1
 
-def scanForArguments(text, exptLength, opname):
+def scanForArguments(text, exptLength, opname, includeLine = True):
     args = []
     firstSpaceFound = False
     arg = ""
@@ -173,7 +176,12 @@ def scanForArguments(text, exptLength, opname):
     
     if argsLength != exptLength:
         if not (argsLength == exptLength + 1 and (args[argsLength - 1][0] == '(' and args[argsLength - 1][len(args[argsLength - 1]) - 1] == ')')):
-            error("Invalid number of parameters for " + opname + " (expected " + str(exptLength) + ", got " + str(len(args)) + ") on line " + str(lineNum))
+            errorMsg = "Invalid number of parameters for " + opname + " (expected " + str(exptLength) + ", got " + str(len(args)) + ")"
+            
+            if includeLine:
+                errorMsg += "on line " + str(lineNum)
+                
+            error(errorMsg)
         
     return args
     
@@ -229,27 +237,73 @@ def numToHex(arg, half, line):
 def varHalfError(opcds, name, line, half):
     if opcds.width == -1 and half:
         error("Variable (" + name + ") address illegally accessed during half mode operation on line " + str(line))
-        
-def readConfig(): #READS FIRST FILE WITH A .acf EXTENSION
+
+def versionToNum(versionString):
+    versionSections = scanForArguments(" " + versionString.replace(".", " ") + " ", 3, "VERSION", False)
+    num = int(versionSections[0]) * versionExpandConstant * versionExpandConstant
+    num += int(versionSections[1]) * versionExpandConstant
+    num += int(versionSections[2])  
+    return num
+
+def numToVersion(versionNum):
+    string = ""
+    string += str(int(versionNum / (versionExpandConstant * versionExpandConstant))) + "."
+    string += str(int(str(int(versionNum / versionExpandConstant))[-4:])) + "."
+    string += str(int(str(int(versionNum))[-4:]))
+    return string
+
+def findConfigs(): #Finds all config files
     global failed
-    folder = "Config"
-    filename = ""
-    configFile = None
+    global mostRecentConfigVersion
+    filenames = []
+    
     try:
-        for name in os.listdir(folder):
+        for name in os.listdir(configFolderPath):
             if name.endswith(('.acf')):
-                filename = name
-                break
-    except:
-        error("Issue with config folder")
+                filenames.append(name)
+    except Exception as e:
+        error("Issue with config folder - " + repr(e))
         sys.exit()
+        
+    for f in filenames:
+        file = open(configFolderPath + "/" + f, 'r')
+        line = file.readline().strip()
+
+        if line[:7] == "VERSION":
+            versionString = extractOperation(line[7:])
+            versionSections = scanForArguments(" " + versionString.replace(".", " ") + " ", 3, "VERSION", False)
+            try:
+                versionNum = versionToNum(versionString)
+                
+                if versionNum in configFiles:
+                    error("Conflicting files with same version (" + f + ") and (" + configFiles[versionNum] + ")")
+                else:
+                    configFiles[versionNum] = f
+                
+                if versionNum > mostRecentConfigVersion:
+                    mostRecentConfigVersion = versionNum
+            except:
+                error("Cannot read config version numbers in file (" + f + ")")
+                
+        else:
+            error("Cannot read config version in file (" + f + "). Make sure it is on the first line")
+        
+        file.close()
+
+    if failed:
+        error("Configuration file issue. Aborted")
+        sys.exit()
+ 
+def readConfig(filename):
+    global failed
+    configFile = None
     
     if filename == "":
             error("Cannot find config file (must end in .acf)")
             sys.exit()
     else:
         try:
-            configFile = open(folder + "/" + filename, 'r')
+            configFile = open(configFolderPath + "/" + filename, 'r')
         except:
             error("Cannot open config file")
             sys.exit()
@@ -260,23 +314,24 @@ def readConfig(): #READS FIRST FILE WITH A .acf EXTENSION
     
     for line in configuration:
         confLine += 1
-        configOp = extractOperation(line)
-        lineArgs = line.lstrip().replace(configOp, "") + '\n'
-        
-        if configOp == "OPCODE":
-            confArgs = scanForArguments(lineArgs, 5, "CONFIG OPCODE")
-            try:
-                newOp = Opcode(confArgs)
-                opcodes.append(newOp)
-                if showReadConfig:
-                    newOp.show()
-            except:
-                error("Couldn't read opcode arguments on line " + str(confLine))
-        elif not configOp == "":
-            error("Unrecognised configuration keyword (" + configOp + ") on line " + str(confLine))
+        if confLine > 1:
+            configOp = extractOperation(line)
+            lineArgs = line.lstrip().replace(configOp, "") + '\n'
+            
+            if configOp == "OPCODE":
+                confArgs = scanForArguments(lineArgs, 5, "CONFIG OPCODE")
+                try:
+                    newOp = Opcode(confArgs)
+                    opcodes.append(newOp)
+                    if showReadConfig:
+                        newOp.show()
+                except:
+                    error("Couldn't read opcode arguments on line " + str(confLine))
+            elif not configOp == "":
+                error("Unrecognised configuration keyword (" + configOp + ") on line " + str(confLine))
             
     if failed:
-        error("Configuration issue. Aborted")
+        error("Configuration file issue. Aborted")
         sys.exit()
   
 #Intro
@@ -288,8 +343,8 @@ No File Output mode : -nfo
 Print Hex block     : -hx
 """)
 
-#Opcode and predefined variable collection
-readConfig()
+#Find config files and their versions
+findConfigs()
 
 #User File operations
 progRoot = "Programs/"
@@ -317,6 +372,17 @@ while not enteredFile:
         printBlock = True
         filename = filename.replace(" -hx", '')
     
+    if " -v" in filename:
+        substring = filename[(filename.find(" -v") + 3):]
+        versionText = extractOperation(substring)
+        print("Using specified configuration version: " + versionText)
+        currentConfig = versionToNum(versionText)
+        filename = filename.replace(" -v" + versionText, '')
+    else:
+        currentConfig = mostRecentConfigVersion
+
+    filename = filename.strip()
+    
     assmFilename = filename.replace(".sa", ".mi")
     filename = progRoot + filename
     assmFilename = assmRoot + assmFilename
@@ -327,6 +393,9 @@ while not enteredFile:
     except:
         print("ERROR: Invalid filename") #Not a failure error, so normal print used
 
+#Getting configuration
+print("Using configuration file: " + configFiles[currentConfig] + "\nVersion: " + numToVersion(currentConfig))
+readConfig(configFiles[currentConfig])
 print() #Separates sections
        
 lines = progFile.readlines()
@@ -505,7 +574,7 @@ for line in firstPass:
             if halfMode and var.width == 2:
                 warning("WARNING: Variable (" + var.name + ") is used in half mode operation, but is a 2B value. Only the first byte will be used")
         
-            if not halfMode and var.width == 1 and opcodes[lastOpIndex].ramWrite:
+            if not halfMode and var.width == 1 and lastOp.ramWrite:
                 error("Half width variable (" + var.name + ") has illegal write attempt during full mode operation")
         else:
             error("Unknown variable (" + line + ") found during second pass")
@@ -535,14 +604,14 @@ for line in firstPass:
     elif line == "^^^":
         continue
     elif opIndex != -1:
-        secondPass.append(int8ToHex(opIndex))
+        secondPass.append(int8ToHex(opcodes[opIndex].index))
         
         if line == "SHM":
             halfMode = True
         elif line == "SFM":
             halfMode = False
             
-        lastOpIndex = opIndex
+        lastOp = opcodes[opIndex]
     elif line[0] == 'g':
         secondPass.append(int8ToHex(gpuOpcodes.index(line)))
     else:
@@ -582,6 +651,7 @@ if len(thirdPass) > MEMORY_AVAILABLE:
   
 if failed:
     print("Assembly Failure (" + str(errors) + " error" + ("s" if errors > 1 else "") + ", " + str(warnings) + " warning" + ("s" if warnings > 1 else "") + ")")
+    print("Make sure the correct configuration version has been used")
 else:
     print("Assembled Successfully\nProgram Size: " + str(progLength) + "B")
     if warnings > 0:

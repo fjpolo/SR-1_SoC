@@ -1,4 +1,6 @@
-// For SR-1 Version 0.9
+VERSION 1.0.0 //VERSION TAG MUST BE ON THE FIRST LINE
+//ALL NUMERIC VALUES MUST BE DENARY
+
 // OPCODE CREATION TABLE - DO NOT EDIT UNLESS YOU UNDERSTAND WHAT THESE REPRESENT!
 // WIDTH is how much data is required after the instruction byte.
 // For example JMP has a WIDTH of 2, as it requires 2B of data after the instruction.
@@ -6,7 +8,7 @@
 //
 // W_RAM tells the assembler that this instruction writes a variable width word to RAM
 // and thus appropriate memory safety checks should be in place (T = True, - = False)
-//
+
 //     NAME   INDEX  ARG_NUM  WIDTH   W_RAM?
 OPCODE NXI      0       0       0       -
 OPCODE LDA      1       1       2       -
