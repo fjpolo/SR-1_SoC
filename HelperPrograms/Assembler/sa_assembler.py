@@ -1,4 +1,4 @@
-# Simple assembler version 2.0.2
+# Simple assembler version 2.0.3
 # Assembles simple assembly files into machine code
 # into a .mi file needed by the Gowin bsram init menu.
 # RAM settings:
@@ -14,6 +14,8 @@
 # You may use, distribute and modify this code under the
 # terms of the CC BY-NC 4.0 license
 
+import os
+import sys
 import numpy as np
 
 #Global Variables
@@ -23,19 +25,38 @@ failed = False
 errors = 0
 warnings = 0
 programOffset = 0
+showReadConfig = False #For config debug purposes
 
 #Opcode
 class Opcode:
-    def __init__(self, name, argCount, width = -2, ramW = False):
-        self.name = name
-        self.args = argCount
-        if width == -2:
-            self.width = argCount * 2
+    def __init__(self, argArray): #name, argCount, width = -2, ramW = False
+        self.name = argArray[0]
+        self.index = int(argArray[1])
+        self.args = int(argArray[2])
+        if argArray[3] == "V":
+            self.width = -1
         else:
-            self.width = width
+            self.width = int(argArray[3])
         
-        self.ramWrite = ramW #These are opcodes that write to RAM depending on half mode
-                             #Things like GDTx and CPYx are not included as these are half mode independent
+        self.ramWrite = (argArray[4] == "T")    #These are opcodes that write to RAM depending on half mode
+                                                #Things like GDTx and CPYx are not included as these are half mode independent
+    
+    def show(self):
+        opcodeText = "OPCODE - NAME:" + self.name.ljust(5) + " INDEX:" + str(self.index).ljust(3) + " REQUIRED ARGS:" + str(self.args).ljust(1) + " WIDTH:"
+        
+        if (self.width == -1):
+            opcodeText += "VARIABLE"
+        else:
+            opcodeText += str(self.width).ljust(8)
+        
+        opcodeText += " VARIABLE WIDTH RAM WRITE:"
+        
+        if self.ramWrite:
+            opcodeText += "TRUE "
+        else:
+            opcodeText += "FALSE"
+        
+        print(opcodeText)
             
 class Var:
     def __init__(self, name, initialValue, width, address = -1, atf = True, buffer = False):
@@ -52,14 +73,7 @@ class Alias:
         self.addr = address
         
 #Opcode list
-opcodes = [Opcode("NXI", 0), Opcode("LDA", 1), Opcode("LDAI", 1, -1), Opcode("RDA", 1, ramW = True), Opcode("ATB", 0), Opcode("ATC", 0), Opcode("ATD", 0), 
-           Opcode("LDD", 1), Opcode("LDDI", 1, -1), Opcode("BTA", 0), Opcode("CTA", 0), Opcode("ADD", 1), Opcode("SUB", 1), Opcode("MUL", 1), 
-           Opcode("LSHFT", 0), Opcode("RSHFT", 0), Opcode("AND", 1), Opcode("OR", 1), Opcode("XOR", 1), Opcode("NOT", 0), Opcode("ADDI", 1, -1), 
-           Opcode("SUBI", 1, -1), Opcode("MULI", 1, -1), Opcode("ANDI", 1, -1), Opcode("ORI", 1, -1), Opcode("XORI", 1, -1), Opcode("ANDB", 1), Opcode("ORB", 1), 
-           Opcode("XORB", 1), Opcode("NOTB", 0), Opcode("ANDBI", 1, -1), Opcode("ORBI", 1, -1), Opcode("XORBI", 1, -1), Opcode("JMP", 1), Opcode("JPZ", 1), 
-           Opcode("JPC", 1), Opcode("BCD", 0), Opcode("CPY", 2), Opcode("CPY2", 2), Opcode("GPU", 0), Opcode("GDT3", 3, 5), Opcode("GDT7", 7, 10), 
-           Opcode("SMT", 0), Opcode("SUT", 0), Opcode("WMT", 0), Opcode("WUT", 0), Opcode("WFT", 0), Opcode("WGPU", 0), Opcode("SHM", 0), 
-           Opcode("SFM", 0), Opcode("HLT", 0), Opcode("JPG", 1), Opcode("JPL", 1), Opcode("JPE", 1)]
+opcodes = []
 
 gpuOpcodes = ["gNXI", "gLDC", "gLDI", "gSDC", "gLMV", "gMM2", "gMM4", 
         "gDRL", "gDRP", "gMA2", "gSCO", "gSCI", "gINI", "gSNF", "gCPY"]
@@ -71,7 +85,7 @@ def error(msg):
     global failed
     global errors
     failed = True
-    print(msg)
+    print("ERROR: " + msg)
     errors += 1
 
 def warning(msg):
@@ -84,14 +98,14 @@ def fp16ToHex(fp16):
     
 def int16ToHex(i16, line = "UNKNOWN"):
     if i16 > 65535:
-        error("ERROR: Value too large on line: " + line)
+        error("Value too large on line: " + line)
         return "FFFF"
     else:
         return hex(i16)[2:].zfill(4)
 
 def int8ToHex(i8, line = "UNKNOWN"):
     if i8 > 255:
-        error("ERROR: Value too large on line: " + line)
+        error("Value too large on line: " + line)
         return "FF"
     else:
         return hex(i8)[2:].zfill(2)
@@ -114,7 +128,7 @@ def inOpcodes(name):
     index = 0
     for opcode in opcodes:
         if opcode.name == name:
-            return index
+            return opcode.index
         index += 1
     return -1
     
@@ -159,7 +173,7 @@ def scanForArguments(text, exptLength, opname):
     
     if argsLength != exptLength:
         if not (argsLength == exptLength + 1 and (args[argsLength - 1][0] == '(' and args[argsLength - 1][len(args[argsLength - 1]) - 1] == ')')):
-            error("ERROR: Invalid number of parameters for " + opname + " (expected " + str(exptLength) + ", got " + str(len(args)) + ") on line " + str(lineNum))
+            error("Invalid number of parameters for " + opname + " (expected " + str(exptLength) + ", got " + str(len(args)) + ") on line " + str(lineNum))
         
     return args
     
@@ -178,7 +192,7 @@ def numToHex(arg, half, line):
                     byteData.append(integerData[2:4])
                     byteData.append(integerData[0:2])
             except:
-                error("ERROR: Cannot parse binary string on line " + line)
+                error("Cannot parse binary string on line " + line)
         elif arg[0:2] == "0x":
             try:
                 arg = arg[2:]
@@ -190,7 +204,7 @@ def numToHex(arg, half, line):
                     byteData.append(integerData[2:4])
                     byteData.append(integerData[0:2])
             except:
-                error("ERROR: Cannot parse hex string on line " + line)
+                error("Cannot parse hex string on line " + line)
         else:
             try:
                 if half:
@@ -200,12 +214,12 @@ def numToHex(arg, half, line):
                     byteData.append(integerData[2:4])
                     byteData.append(integerData[0:2])
             except:
-                error("ERROR: Cannot parse integer on line " + line)
+                error("Cannot parse integer on line " + line)
     else:
         try:
             floatData = fp16ToHex(float(arg))
         except:
-            error("ERROR: Cannot parse float on line " + line)
+            error("Cannot parse float on line " + line)
             
         byteData.append(floatData[2:4])
         byteData.append(floatData[0:2])
@@ -214,7 +228,56 @@ def numToHex(arg, half, line):
     
 def varHalfError(opcds, name, line, half):
     if opcds.width == -1 and half:
-        error("ERROR: Variable (" + name + ") address illegally accessed during half mode operation on line " + str(line))
+        error("Variable (" + name + ") address illegally accessed during half mode operation on line " + str(line))
+        
+def readConfig(): #READS FIRST FILE WITH A .acf EXTENSION
+    global failed
+    folder = "Config"
+    filename = ""
+    configFile = None
+    try:
+        for name in os.listdir(folder):
+            if name.endswith(('.acf')):
+                filename = name
+                break
+    except:
+        error("Issue with config folder")
+        sys.exit()
+    
+    if filename == "":
+            error("Cannot find config file (must end in .acf)")
+            sys.exit()
+    else:
+        try:
+            configFile = open(folder + "/" + filename, 'r')
+        except:
+            error("Cannot open config file")
+            sys.exit()
+    
+    configuration = configFile.readlines()
+    configFile.close()
+    confLine = 0
+    
+    for line in configuration:
+        confLine += 1
+        configOp = extractOperation(line)
+        lineArgs = line.lstrip().replace(configOp, "") + '\n'
+        
+        if configOp == "OPCODE":
+            confArgs = scanForArguments(lineArgs, 5, "CONFIG OPCODE")
+            try:
+                newOp = Opcode(confArgs)
+                opcodes.append(newOp)
+                if showReadConfig:
+                    newOp.show()
+            except:
+                error("Couldn't read opcode arguments on line " + str(confLine))
+        elif not configOp == "":
+            error("Unrecognised configuration keyword (" + configOp + ") on line " + str(confLine))
+            
+    if failed:
+        error("Configuration issue. Aborted")
+        sys.exit()
   
 #Intro
 print(""" 
@@ -225,7 +288,10 @@ No File Output mode : -nfo
 Print Hex block     : -hx
 """)
 
-#File operations
+#Opcode and predefined variable collection
+readConfig()
+
+#User File operations
 progRoot = "Programs/"
 assmRoot = "Assembled/"
 enteredFile = False
@@ -259,7 +325,7 @@ while not enteredFile:
         progFile = open(filename, 'r')
         enteredFile = True
     except:
-        print("ERROR: INVALID FILENAME") #Not a failure error, so normal print used
+        print("ERROR: Invalid filename") #Not a failure error, so normal print used
 
 print() #Separates sections
        
@@ -353,7 +419,7 @@ for line in lines:
                 if inVars(arg, variables) == -1 and inAliases(arg, aliases) == -1:
                     aliases.append(Alias(arg, len(firstPass) - (width + 1) + programOffset))
                 else:
-                    error("ERROR: Identifier (" + arg + ") already exists")
+                    error("Identifier (" + arg + ") already exists")
 
             elif inVars(arg, variables) != -1 :
                 if debug:
@@ -382,23 +448,23 @@ for line in lines:
             if inVars(newVar.name, variables) == -1 and inAliases(newVar.name, aliases) == -1:
                 variables.append(newVar)
             else:
-                error("ERROR: Identifier (" + newVar.name + ") already exists")
+                error("Identifier (" + newVar.name + ") already exists")
             
             if not isBuffer:
                 if int(operation[3]) == 1 and "." in args[1]:
-                    error("ERROR: Floating point value assigned to single byte for variable " + newVar.name)
+                    error("Floating point value assigned to single byte for variable " + newVar.name)
                     
                 if int(operation[3]) > 2:
-                    error("ERROR: Size too large for variable " + newVar.name)
+                    error("Size too large for variable " + newVar.name)
         except:
-            error("ERROR: Cannot read size for variable or width of buffer on line " + str(lineNum))
+            error("Cannot read size for variable or width of buffer on line " + str(lineNum))
         
         if debug:
             print("Found variable/buffer declaration (" + args[0] + ") on line " + str(lineNum))
     elif operation.replace(" ", "") == "":
         continue
     else:
-        error("ERROR: Operation (" + operation + ") not recognised on line " + str(lineNum))
+        error("Operation (" + operation + ") not recognised on line " + str(lineNum))
 
 if debug:
     print("\nFirst Pass Results:")
@@ -417,7 +483,7 @@ for v in variables:
         else:
             v.val = numToHex(v.val, (v.width == 1), "VARIABLE CHECK")
     except:
-        error("ERROR: Cannot parse initial value (" + str(v.val) + ") for variable " + v.name)
+        error("Cannot parse initial value (" + str(v.val) + ") for variable " + v.name)
     
     if v.addr == -1:
         v.addr = int16ToHex(progLength + 1 + programOffset)
@@ -440,9 +506,9 @@ for line in firstPass:
                 warning("WARNING: Variable (" + var.name + ") is used in half mode operation, but is a 2B value. Only the first byte will be used")
         
             if not halfMode and var.width == 1 and opcodes[lastOpIndex].ramWrite:
-                error("ERROR: Half width variable (" + var.name + ") has illegal write attempt during full mode operation")
+                error("Half width variable (" + var.name + ") has illegal write attempt during full mode operation")
         else:
-            error("ERROR: Unknown variable (" + line + ") found during second pass")
+            error("Unknown variable (" + line + ") found during second pass")
 
     elif line[0] == '*': #Alias use
         try:
@@ -454,14 +520,14 @@ for line in firstPass:
                 aliasName = line[1:]
                 argOffset = 0
         except:
-            error("ERROR: Cannot parse alias (" + line + ") or offset during second pass")
+            error("Cannot parse alias (" + line + ") or offset during second pass")
         
         aliasIndex = inAliases(aliasName, aliases)
         
         if aliasIndex != -1:
             a = aliases[aliasIndex]
         else:
-            error("ERROR: Unknown alias (" + aliasName + ") found during second pass")
+            error("Unknown alias (" + aliasName + ") found during second pass")
 
         addressData = int16ToHex(a.addr + argOffset, "SECOND PASS")
         secondPass.append(addressData[2:4])
@@ -512,7 +578,7 @@ if debug:
 print() #Separate sections
 
 if len(thirdPass) > MEMORY_AVAILABLE:
-    error("ERROR: Not enough RAM")
+    error("Not enough RAM")
   
 if failed:
     print("Assembly Failure (" + str(errors) + " error" + ("s" if errors > 1 else "") + ", " + str(warnings) + " warning" + ("s" if warnings > 1 else "") + ")")

@@ -9,7 +9,7 @@ This project is licensed under the **Creative Commons Attribution-NonCommercial 
 See the [LICENSE](LICENSE) file for more details, especially regarding media, as this is not covered under the above license.
 
 ## Programming
-You can use the custom simple assembly language to create a .sa file, which can then be [assembled](HelperPrograms/sa_assembler.py) into a .mi file for recreating the [DP_BSRAM8 file](CPU/Memory/gowin_dpb/dp_bsram8.v)  
+You can use the custom simple assembly language to create a .sa file, which can then be [assembled](HelperPrograms/Assembler/sa_assembler.py) into a .mi file for recreating the [DP_BSRAM8 file](CPU/Memory/gowin_dpb/dp_bsram8.v)  
 The parameters to do so are as follows:
 - Module Name: 	    DP_BSRAM8
 - Address Depth:	32768 (for both ports)
@@ -25,7 +25,7 @@ I put it onto a breadboard to connect all the IO, as seen below.
 <img src="Images/physical_circuit.jpg" alt="Physical circuit on a breadboard">
 
 ## Assembly Documentation
-I have written an extensive document on how to use the system's custom assembly language, called [Simple Assembly](HelperPrograms/Assembler.pdf)
+I have written an extensive document on how to use the system's custom assembly language, called [Simple Assembly](HelperPrograms/Assembler/Assembler.pdf)
 
 ## CPU Block Diagram 
 <img src="Images/cpu_block.png" alt="CPU Block Diagram">
