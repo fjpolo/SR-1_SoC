@@ -1,7 +1,9 @@
 //Breakout
+//Updated for config v1.0.0
 
 //Setup
 VAR1 clkspd 1
+VAR1 ZERO 0
 
 //Levels
 VAR2 lvlR0 0xFFFF
@@ -156,7 +158,7 @@ SFM
 JPE *startBrickGenY
 JMP *loopBrickGenX
 
-CPY brickGenXRepeat CONST_ZERO (startBrickGenY)
+CPY brickGenXRepeat ZERO (startBrickGenY)
 LDAI 8
 RDA brickGenNum 
 LDAI 1
@@ -187,7 +189,7 @@ RDA brickGenXRepeat
 LDDI 16
 SFM
 JPL *p0y
-CPY brickGenXRepeat CONST_ZERO
+CPY brickGenXRepeat ZERO
 LDA brickGenNum
 ADDI 4
 RDA brickGenNum
@@ -213,14 +215,14 @@ JMP *loopBrickGenY
 //Wait for start
 SHM (mainLoopStart)
 LDA started
-ORB MM_BUTTON
+ORB IO_BUTTON
 RDA started
 SFM
 JPZ *mainLoopStart
 
 //Paddle Movement
 SHM (drawFirstFrame)
-LDA MM_BUTTON //Rightwards movement
+LDA IO_BUTTON //Rightwards movement
 ANDI 16
 SFM
 JPZ *checkNextButton
@@ -230,7 +232,7 @@ LDD paddleMaxX
 JPG *checkNextButton
 RDA paddleX
 SHM (checkNextButton)
-LDA MM_BUTTON //Leftwards movement
+LDA IO_BUTTON //Leftwards movement
 ANDI 32
 SFM
 JPZ *ballXMovement
@@ -489,7 +491,7 @@ GDT7 gDRP 1284 0 0 2 2 3 //Draw ball (2x2)
 GPU
 
 //Settings LEDS
-CPY MM_LEDS lives (skipBallDraw)
+CPY IO_LEDS lives (skipBallDraw)
 
 //Waiting for frame timer and sending frame
 WFT
@@ -512,7 +514,7 @@ LDDI 1
 JPE *loadLvl2
 LDDI 2
 JPE *loadLvl3
-CPY lvlsCompleted CONST_ZERO
+CPY lvlsCompleted ZERO
 LDAI lvl1R0
 JMP *loadNextLvl
 LDAI lvl2R0 (loadLvl2)
@@ -550,7 +552,7 @@ SHM (noMoreLives) //Restarts game
 LDAI 0x3F
 RDA lives
 SFM
-CPY lvlsCompleted CONST_ZERO
+CPY lvlsCompleted ZERO
 CPY2 lvlR0 lvl1R0
 CPY2 lvlR1 lvl1R1
 CPY2 lvlR2 lvl1R2
@@ -559,7 +561,7 @@ CPY2 lvlR4 lvl1R4
 CPY2 lvlR5 lvl1R5
 CPY2 lvlR6 lvl1R6
 CPY2 lvlR7 lvl1R7
-CPY started CONST_ZERO (restartSkipLifeReset)
+CPY started ZERO (restartSkipLifeReset)
 CPY2 ballX ballXReset
 CPY2 ballY ballYReset
 CPY2 paddleX paddleXReset

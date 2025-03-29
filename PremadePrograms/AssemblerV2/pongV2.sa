@@ -1,4 +1,5 @@
 //Pong Version 2.0
+//Updated for config v1.0.0
 
 VAR1 clkspd 1
 VAR2 paddleY 256
@@ -101,7 +102,7 @@ RDA paddleMaxY
 
 //Paddle movement
 SHM (mainLoopStart)
-LDA MM_BUTTON //Downwards movement
+LDA IO_BUTTON //Downwards movement
 ANDI 4
 SFM
 JPZ *checkNextButton
@@ -111,7 +112,7 @@ LDD paddleMaxY
 JPG *checkNextButton
 RDA paddleY
 SHM (checkNextButton)
-LDA MM_BUTTON //Upwards movement
+LDA IO_BUTTON //Upwards movement
 ANDI 8
 SFM
 JPZ *ballYMovement
@@ -229,7 +230,7 @@ RSHFT
 RSHFT
 RSHFT
 RDA ballY8
-CPY MM_LEDS score //Showing score on the LEDs
+CPY IO_LEDS score //Showing score on the LEDs
 GDT7 gDRP 0 0 0 2 2 63 //Draw centre (dotted) line
 GPU
 LDA paddleY

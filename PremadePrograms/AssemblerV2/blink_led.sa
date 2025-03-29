@@ -1,11 +1,13 @@
+//Updated for config v1.0.0
+
 VAR1 bitmask 1
 
 LDDI 999
 SMT (loopStart)
 SHM
-LDA MM_LEDS
+LDA IO_LEDS
 XOR bitmask
-RDA MM_LEDS
+RDA IO_LEDS
 SFM
 WMT
 JMP *loopStart

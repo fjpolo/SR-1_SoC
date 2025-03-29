@@ -1,28 +1,31 @@
+//Updated for config v1.0.0
+
 VAR2 dividend 0
 VAR2 divisor 0
 VAR2 quotient 0
 VAR2 remainder 0
 VAR2 multiplicand 0
 VAR2 multiplicandRST 0x8000
+VAR2 ZERO 0
 
 //Input
 SHM (progLoop)
-LDA MM_BUTTON
+LDA IO_BUTTON
 ANDI 64
 SFM
 JPZ *progLoop
-CPY2 dividend MM_WIDE
-CPY divisor MM_THIN
+CPY2 dividend IO_WIDE
+CPY divisor IO_THIN
 
 //Divider
 CPY2 multiplicand multiplicandRST
-CPY2 quotient CONST_ZERO
+CPY2 quotient ZERO
 LDA divisor (start)
 MUL multiplicand
 JPC *shiftMult //If carries, result will go negative
 ATB
 LDA dividend
-SUB MM_B
+SUB CPU_REG_B
 JPC *shiftMult //If carries, result went negative
 RDA dividend
 LDA multiplicand
@@ -37,5 +40,5 @@ CPY2 remainder dividend (exit)
 
 //Output
 LDA quotient
-CPY MM_LEDS MM_A_L
+CPY IO_LEDS CPU_REG_A_L
 JMP *progLoop

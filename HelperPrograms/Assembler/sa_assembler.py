@@ -1,4 +1,4 @@
-# Simple assembler version 2.0.4
+# Simple assembler version 2.0.5
 # Assembles simple assembly files into machine code
 # into a .mi file needed by the Gowin bsram init menu.
 # RAM settings:
@@ -26,6 +26,7 @@ errors = 0
 warnings = 0
 programOffset = 0
 showReadConfig = False #For config debug purposes
+passDebug = False #Show each pass result
 
 #Opcode
 class Opcode:
@@ -42,7 +43,7 @@ class Opcode:
                                                 #Things like GDTx and CPYx are not included as these are half mode independent
     
     def show(self):
-        opcodeText = "OPCODE - NAME:" + self.name.ljust(5) + " INDEX:" + str(self.index).ljust(3) + " REQUIRED ARGS:" + str(self.args).ljust(1) + " WIDTH:"
+        opcodeText = "OPCODE - NAME:" + self.name.ljust(5) + " INDEX:" + str(self.index).ljust(3) + " REQUIRED ARGS:" + str(self.args).ljust(2) + " WIDTH:"
         
         if (self.width == -1):
             opcodeText += "VARIABLE"
@@ -59,13 +60,38 @@ class Opcode:
         print(opcodeText)
             
 class Var:
-    def __init__(self, name, initialValue, width, address = -1, atf = True, buffer = False):
+    def __init__(self, name, initialValue, width, address, read, write, atf = True, buffer = False):
         self.name = name
         self.val = initialValue
+        self.width = width
         self.addr = address
         self.addToFile = atf
-        self.width = width
         self.buffer = buffer
+        self.readable = read
+        self.writable = write
+        
+    def show(self):
+        varText = "MEM_LOC - NAME:" + self.name.ljust(15) + " ADDR:" + str(self.addr).ljust(5) + " WIDTH:" + str(self.width).ljust(5)
+        
+        varText += " BUFFER:"
+        if self.buffer:
+            varText += "TRUE "
+        else:
+            varText += "FALSE"
+        
+        varText += " READABLE:"
+        if self.readable:
+            varText += "TRUE "
+        else:
+            varText += "FALSE"
+            
+        varText += " WRITABLE:"
+        if self.writable:
+            varText += "TRUE "
+        else:
+            varText += "FALSE"
+        
+        print(varText)
 
 class Alias:
     def __init__(self, name, address):
@@ -74,6 +100,7 @@ class Alias:
         
 #Configuration
 opcodes = [] #In config file
+variables = []
 configFiles = {}
 mostRecentConfigVersion = 0
 configFolderPath = "Config"
@@ -311,6 +338,8 @@ def readConfig(filename):
     configuration = configFile.readlines()
     configFile.close()
     confLine = 0
+    opcodeCount = 0
+    predefCount = 0
     
     for line in configuration:
         confLine += 1
@@ -325,14 +354,29 @@ def readConfig(filename):
                     opcodes.append(newOp)
                     if showReadConfig:
                         newOp.show()
+                    opcodeCount += 1
                 except:
-                    error("Couldn't read opcode arguments on line " + str(confLine))
+                    error("Couldn't read OPCODE arguments on line " + str(confLine))
+            elif configOp == "MEM_LOC":
+                confArgs = scanForArguments(lineArgs, 5, "CONFIG OPCODE")
+                try:
+                    readable = confArgs[3] == "T"
+                    writable = confArgs[4] == "T"
+                    newVar = Var(confArgs[0], "0", int(confArgs[2]), int(confArgs[1]), readable, writable, False, False)
+                    variables.append(newVar)
+                    if showReadConfig:
+                        newVar.show()
+                    predefCount += 1
+                except Exception as e:
+                    error("Couldn't read MEM_LOC arguments on line " + str(confLine) + repr(e))
             elif not configOp == "":
                 error("Unrecognised configuration keyword (" + configOp + ") on line " + str(confLine))
             
     if failed:
         error("Configuration file issue. Aborted")
         sys.exit()
+    else:
+        print("Loaded " + str(opcodeCount) + " opcodes and " + str(predefCount) + " pre-defined memory locations")
   
 #Intro
 print(""" 
@@ -396,7 +440,6 @@ while not enteredFile:
 #Getting configuration
 print("Using configuration file: " + configFiles[currentConfig] + "\nVersion: " + numToVersion(currentConfig))
 readConfig(configFiles[currentConfig])
-print() #Separates sections
        
 lines = progFile.readlines()
 progFile.close()
@@ -405,34 +448,7 @@ halfMode = False
 offsetAddress = 0
 aliases = [Alias("RAM_START", 0)]
 
-#Variable list with predefined addresses already added
-variables = [Var("MM_CLKPRE", "0", 1, 32767, False),
-             Var("MM_GREPEAT", "0", 1, 32766, False),
-             Var("MM_GPCBI", "0", 1, 32765, False),
-             Var("MM_GPCAI", "0", 1, 32764, False),
-             Var("MM_GPCB", "0", 2, 32762, False),
-             Var("MM_C2G", "0", 2, 32760, False),
-             Var("MM_GPCA", "0", 2, 32758, False),
-             Var("MM_GINSTR", "0", 1, 32757, False),
-             Var("MM_G2C", "0", 2, 32755, False),
-             Var("MM_GFP2I", "0", 2, 32753, False),
-             Var("MM_BUTTON", "0", 1, 32752, False),
-             Var("MM_WIDE", "0", 2, 32750, False),
-             Var("MM_THIN", "0", 1, 32749, False),
-             Var("MM_D", "0", 2, 32747, False),
-             Var("MM_C", "0", 2, 32745, False),
-             Var("MM_B", "0", 2, 32743, False),
-             Var("MM_A_H", "0", 1, 32742, False),
-             Var("MM_A_L", "0", 1, 32741, False),
-             Var("MM_DD4", "0", 1, 32740, False),
-             Var("MM_DD3", "0", 1, 32739, False),
-             Var("MM_DD2", "0", 1, 32738, False),
-             Var("MM_DD1", "0", 1, 32737, False),
-             Var("MM_DD0", "0", 1, 32736, False),
-             Var("MM_LEDS", "0", 1, 32735, False),
-             Var("CONST_ZERO", "0", 2, 0, False)]
-
-programOffset += 1; #First 2 addresses are zero for CONST_ZERO Variable
+programOffset += 1; #First 1 address MUST be zero
 
 for line in lines:
     lineNum += 1
@@ -481,7 +497,7 @@ for line in lines:
                 
             elif arg[0] == '(' and arg[len(arg) - 1] == ')': #Alias declaration
                 if debug:
-                    print("Found alias (" + arg + ") on line " + str(lineNum))
+                    print("Found alias " + arg + " on line " + str(lineNum))
                 
                 arg = arg.replace("(", "").replace(")", "")
                
@@ -504,15 +520,26 @@ for line in lines:
                 firstPass.append("^^^")
                 varHalfError(opInstruction, arg, lineNum, halfMode)
                 
-    elif operation[:3] == "VAR" or operation == "BUF":
+    elif operation[:3] == "VAR" or operation == "BUF" or operation[:5] == "CONST":
         isBuffer = (operation == "BUF")
-        args = scanForArguments(line, 2, ("BUFFER" if isBuffer else "VARIABLE"))
+        isConstant = not isBuffer and not (operation[:3] == "VAR")
+        args = scanForArguments(line, 2, ("BUFFER" if isBuffer else "VARIABLE/CONSTANT"))
+        varWidth = 0
         
         try:
+            if not isBuffer:
+                if isConstant:
+                    varWidth = int(operation[5])
+                else:
+                    varWidth = int(operation[3])
+            
             newVar = Var(args[0], 
-                (0 if isBuffer else args[1]), 
-                (int(args[1]) if isBuffer else int(operation[3])), 
-                buffer = isBuffer)
+                        (0 if isBuffer else args[1]), #Initial Value
+                        (int(args[1]) if isBuffer else varWidth), #Width
+                        -1, #Setting address to -1 for now (will be defined later)
+                        True, #Readable
+                        not isConstant, #Writable
+                        buffer = isBuffer)
                 
             if inVars(newVar.name, variables) == -1 and inAliases(newVar.name, aliases) == -1:
                 variables.append(newVar)
@@ -520,22 +547,22 @@ for line in lines:
                 error("Identifier (" + newVar.name + ") already exists")
             
             if not isBuffer:
-                if int(operation[3]) == 1 and "." in args[1]:
-                    error("Floating point value assigned to single byte for variable " + newVar.name)
+                if varWidth == 1 and "." in args[1]:
+                    error("Floating point value assigned to single byte for variable/constant (" + newVar.name + ") Must be 2 bytes")
                     
-                if int(operation[3]) > 2:
-                    error("Size too large for variable " + newVar.name)
+                if varWidth > 2:
+                    error("Size too large for variable/constant " + newVar.name)
         except:
-            error("Cannot read size for variable or width of buffer on line " + str(lineNum))
+            error("Cannot read size for variable/constant or width of buffer on line " + str(lineNum))
         
         if debug:
-            print("Found variable/buffer declaration (" + args[0] + ") on line " + str(lineNum))
+            print("Found variable/buffer/constant declaration (" + args[0] + ") on line " + str(lineNum))
     elif operation.replace(" ", "") == "":
         continue
     else:
         error("Operation (" + operation + ") not recognised on line " + str(lineNum))
 
-if debug:
+if passDebug:
     print("\nFirst Pass Results:")
     printList(firstPass)
         
@@ -559,6 +586,9 @@ for v in variables:
         progLength += v.width
     else:
         v.addr = int16ToHex(v.addr, "VARIABLE CHECK")
+        
+    if debug:
+        v.show()
 
 for line in firstPass:
     opIndex = inOpcodes(line)
@@ -627,7 +657,7 @@ for v in variables:
         else:
             secondPass += v.val;
  
-if debug:
+if passDebug:
     print("\nSecond Pass Results:")
     printList(secondPass)
  
@@ -637,16 +667,16 @@ iteration = 0
 thirdPass = ["#File_format=AddrHex", "#Address_depth=32768", "#Data_width=8"]
 
 for line in secondPass:
-    iteration = iteration + 1
+    iteration += 1
     thirdPass.append(hex(iteration + programOffset).replace("0x", "") + ":" + line);
         
-if debug:
+if passDebug:
     print("Third Pass Results:")
     printList(thirdPass)
 
 print() #Separate sections
 
-if len(thirdPass) > MEMORY_AVAILABLE:
+if (len(thirdPass) - 3) > MEMORY_AVAILABLE:
     error("Not enough RAM")
   
 if failed:
