@@ -1,0 +1,105 @@
+VERSION 1.1.0 //VERSION TAG MUST BE ON THE FIRST LINE
+// ALL NUMERIC VALUES MUST BE DENARY
+// Just like in simple assembly, the argument order is what is critial for these.
+// The table header is merely a comment for visual aid.
+
+// OPCODE CREATION TABLE - DO NOT EDIT UNLESS YOU UNDERSTAND WHAT THESE REPRESENT!
+// WIDTH is how much data is required after the instruction byte.
+// For example JMP has a WIDTH of 2 as it requires 2B of data after the instruction.
+// A WIDTH of V means variable width (depending on half mode
+//
+// W_RAM tells the assembler that this instruction writes a variable width word to RAM
+// and thus appropriate memory safety checks should be in place (T = True - = 
+
+//     NAME   INDEX  ARG NUM  WIDTH   W_RAM?
+OPCODE NXI      0       0       0       -
+OPCODE LDA      1       1       2       -
+OPCODE LDAI     2       1       V       -
+OPCODE RDA      3       1       2       T
+OPCODE ATB      4       0       0       -
+OPCODE ATC      5       0       0       -
+OPCODE ATD      6       0       0       -
+OPCODE LDD      7       1       2       -
+OPCODE LDDI     8       1       V       -
+OPCODE BTA      9       0       0       -
+OPCODE CTA      10      0       0       -
+OPCODE ADD      11      1       2       -
+OPCODE SUB      12      1       2       -
+OPCODE MUL      13      1       2       -
+OPCODE LSHFT    14      0       0       -
+OPCODE RSHFT    15      0       0       -
+OPCODE AND      16      1       2       -
+OPCODE OR       17      1       2       -
+OPCODE XOR      18      1       2       -
+OPCODE NOT      19      0       0       -
+OPCODE ADDI     20      1       V       -
+OPCODE SUBI     21      1       V       -
+OPCODE MULI     22      1       V       -
+OPCODE ANDI     23      1       V       -
+OPCODE ORI      24      1       V       -
+OPCODE XORI     25      1       V       -
+OPCODE ANDB     26      1       2       -
+OPCODE ORB      27      1       2       -
+OPCODE XORB     28      1       2       -
+OPCODE NOTB     29      0       2       -
+OPCODE ANDBI    30      1       V       -
+OPCODE ORBI     31      1       V       -
+OPCODE XORBI    32      1       V       -
+OPCODE JMP      33      1       2       -
+OPCODE JPZ      34      1       2       -
+OPCODE JPC      35      1       2       -
+OPCODE BCD      36      0       0       -
+OPCODE CPY      37      2       4       -
+OPCODE CPY2     38      2       4       -
+OPCODE GPU      39      0       0       -
+OPCODE GDT3     40      3       5       -
+OPCODE GDT7     41      7       10      -
+OPCODE SMT      42      0       0       -
+OPCODE SUT      43      0       0       -
+OPCODE WMT      44      0       0       -
+OPCODE WUT      45      0       0       -
+OPCODE WFT      46      0       0       -
+OPCODE WGPU     47      0       0       -
+OPCODE SHM      48      0       0       -
+OPCODE SFM      49      0       0       -
+OPCODE HLT      50      0       0       -
+OPCODE JPG      51      1       2       -
+OPCODE JPL      52      1       2       -
+OPCODE JPE      53      1       2       -
+
+// PREDEFINED MEMORY LOCATIONS TABLE - DO NOT EDIT UNLESS YOU UNDERSTAND WHAT THESE REPRESENT!
+// ADDRESS is the variable address (must be in denary)
+// WIDTH is the variable width in bytes
+// RD? says to the assembler if the data can be read or not
+// WR? says to the assembler if the address can be written to or not
+// Note that none of these have an initial value. You must create a corresponding memory
+// location in RAM with whatever data you want to be held there and then create a label here.
+
+//      NAME            ADDRESS   WIDTH    RD? WR?
+MEM_LOC MM_CLKPRE       32767       1       T   T
+MEM_LOC GPU_REPEAT      32766       1       T   T
+MEM_LOC GPU_PCBI        32765       1       T   T
+MEM_LOC GPU_PCAI        32764       1       T   T
+MEM_LOC GPU_PCB         32762       2       T   T
+MEM_LOC GPU_C2G         32760       2       T   T
+MEM_LOC GPU_PCA         32758       2       T   T
+MEM_LOC GPU_INSTR       32757       1       T   T
+MEM_LOC GPU_G2C         32755       2       T   T
+MEM_LOC GPU_GFP2I       32753       2       T   T
+MEM_LOC IO_BUTTON       32752       1       T   T
+MEM_LOC IO_SWITCH       32750       2       T   F
+MEM_LOC IO_LEDS         32749       1       T   T
+MEM_LOC CPU_REG_D       32747       2       T   F
+MEM_LOC CPU_REG_C       32745       2       T   F
+MEM_LOC CPU_REG_B       32743       2       T   F
+MEM_LOC CPU_REG_A_H     32742       1       T   F
+MEM_LOC CPU_REG_A_L     32741       1       T   F
+MEM_LOC MM_DD4          32740       1       T   F
+MEM_LOC MM_DD3          32739       1       T   F
+MEM_LOC MM_DD2          32738       1       T   F
+MEM_LOC MM_DD1          32737       1       T   F
+MEM_LOC MM_DD0          32736       1       T   F
+MEM_LOC PORTB_DDR       32735       1       T   F
+MEM_LOC PORTB           32734       1       T   F
+MEM_LOC PORTA_DDR       32732       1       T   F
+MEM_LOC PORTA           32731       1       T   F

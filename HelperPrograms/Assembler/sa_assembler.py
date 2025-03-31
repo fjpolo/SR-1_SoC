@@ -206,7 +206,7 @@ def scanForArguments(text, exptLength, opname, includeLine = True):
             errorMsg = "Invalid number of parameters for " + opname + " (expected " + str(exptLength) + ", got " + str(len(args)) + ")"
             
             if includeLine:
-                errorMsg += "on line " + str(lineNum)
+                errorMsg += " on line " + str(lineNum)
                 
             error(errorMsg)
         

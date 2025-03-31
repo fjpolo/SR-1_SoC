@@ -1,0 +1,68 @@
+//Seven Segment Counter
+//PORTA
+//0 - d
+//1 - c
+//2 - b
+//3 - a
+//4 - f
+//5 - e
+//6 - g
+//7 - NC
+
+//Decoder
+VAR1 NUM0 0b00111111
+VAR1 NUM1 0b00000110
+VAR1 NUM2 0b01101101
+VAR1 NUM3 0b01001111
+VAR1 NUM4 0b01010110
+VAR1 NUM5 0b01011011
+VAR1 NUM6 0b01111011
+VAR1 NUM7 0b00001110
+VAR1 NUM8 0b01111111
+VAR1 NUM9 0b01011111
+
+//Variables
+VAR1 counter 0
+
+LDDI 9
+
+//Decrement
+SHM (loopStart)
+LDA IO_BUTTON
+ANDI 4
+JPZ *checkTop
+LDA counter
+SUBI 1
+JPC *underflow
+JMP *saveCounterDown
+LDAI 9 (underflow)
+RDA counter (saveCounterDown)
+
+LDA IO_BUTTON (waitForLowDown)
+ANDI 4
+NOTB
+JPZ *waitForLowDown
+
+//Increment
+LDA IO_BUTTON (checkTop)
+ANDI 8
+JPZ *setCounter
+LDA counter
+ADDI 1
+JPG *overflow
+JMP *saveCounterUp
+LDAI 0 (overflow)
+RDA counter (saveCounterUp)
+
+LDA IO_BUTTON (waitForLowUp)
+ANDI 8
+NOTB
+JPZ *waitForLowUp
+
+//Draw Number
+LDA counter (setCounter)
+SFM
+ADDI NUM0
+RDA *dataTransfer+2
+CPY PORTA NUM0 (dataTransfer)
+JMP *loopStart

@@ -1,4 +1,4 @@
-//Updated for config v1.0.0
+//Updated for config v1.1.0
 
 VAR2 dividend 0
 VAR2 divisor 0
@@ -14,8 +14,8 @@ LDA IO_BUTTON
 ANDI 64
 SFM
 JPZ *progLoop
-CPY2 dividend IO_WIDE
-CPY divisor IO_THIN
+CPY2 dividend IO_SWITCH
+CPY divisor PORTA
 
 //Divider
 CPY2 multiplicand multiplicandRST
