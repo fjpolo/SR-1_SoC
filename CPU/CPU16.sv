@@ -1,20 +1,17 @@
+//CPU Version 1.1.0
 import OpcodePackage::*;
 import MicrocodePackage::*;
 
-module CPU16(output logic [5:0] n_leds, debug,
-		output logic SCL, SDA_OUT, debug_single,
-		input logic [7:0] n_wide_sw_hi, n_wide_sw_lo, n_thin_sw,
+module CPU16(output logic [5:0] n_leds,
+		output logic SCL, SDA_OUT,
+        inout tri [7:0] port_a, port_b,
+		input logic [7:0] n_wide_sw_hi, n_wide_sw_lo,
 		input logic clk_in, n_reset, n_enter_btn, n_l_btn, n_r_btn, n_t_btn, n_b_btn, n_p0_btn, n_p1_btn, n_c0_btn);
 	
 	logic [15:0] data_bus;
 	logic [7:0] buttons;
 	logic reset, half_mode, half_mode_override, clk;
 	//Half mode refers to using 8bit values in the ALU etc.
-	
-	//DEBUG OUTPUTS
-	//assign debug[0] = clk;
-	//assign debug[1] = half_mode;
-	//assign debug[2] = '1;
 
 	assign reset = ~n_reset; //Active low
 	assign buttons = {~n_c0_btn,    //Active low
@@ -156,7 +153,6 @@ module CPU16(output logic [5:0] n_leds, debug,
 		.wide_sw({~n_wide_sw_hi, ~n_wide_sw_lo}), //Active low
 		.gpu_data_out(gpu_data_out), 
 		.gpu_fp2i(gpu_fp2i),
-		.thin_sw(~n_thin_sw), //Active low
 		.buttons(buttons), 
 		.double_dabble(bcd_ascii),
 		.clk(clk), 
@@ -173,12 +169,12 @@ module CPU16(output logic [5:0] n_leds, debug,
         .reg_a(reg_a),
         .reg_b(reg_b),
         .reg_c(reg_c),
-        .reg_d(reg_d)
+        .reg_d(reg_d),
+        .port_a_phys(port_a),
+        .port_b_phys(port_b)
 	);
 	
 	assign n_leds = ~display_leds[5:0];
-	assign debug = instruction_reg[5:0];
-	assign debug_single = ram_dual_op;
 	
 	//Data bus
 	assign data_bus = (dbo_ram | dbo_ra | dbo_rb | dbo_rc | dbo_rd | dbo_pc);
@@ -234,7 +230,7 @@ module CPU16(output logic [5:0] n_leds, debug,
 		.clk(clk),
 		.clk_hs(clk_in),
 		.reset(reset), 
-		.SDA_IN('0), 
+		.SDA_IN('1), 
 		.gpu_start(gpu_start)
 	);
 	
@@ -261,9 +257,6 @@ module CPU16(output logic [5:0] n_leds, debug,
 		.operation(current_instruction), 
 		.cycle(micro_addr)
 	);
-	
-	//DEBUG
-	//assign n_leds = ~current_instruction[5:0];
 	
 	//Control unit
 	always_ff @ (posedge clk, posedge reset)
