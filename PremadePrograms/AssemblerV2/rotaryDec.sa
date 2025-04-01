@@ -1,0 +1,95 @@
+//Rotary Encoder Counter
+//Using parts of sevenSeg.sa
+
+//PORTA
+//0 - d
+//1 - c
+//2 - b
+//3 - a
+//4 - f
+//5 - e
+//6 - g
+//7 - NC
+
+//Decoder
+VAR1 NUM0 0b00111111
+VAR1 NUM1 0b00000110
+VAR1 NUM2 0b01101101
+VAR1 NUM3 0b01001111
+VAR1 NUM4 0b01010110
+VAR1 NUM5 0b01011011
+VAR1 NUM6 0b01111011
+VAR1 NUM7 0b00001110
+VAR1 NUM8 0b01111111
+VAR1 NUM9 0b01011111
+
+//Variables
+VAR1 counter 0
+VAR1 started 0
+VAR1 ZERO 0
+VAR1 FULL_ONE 0xFF
+
+//Start
+LDDI 9
+SHM
+LDAI 0xFF
+RDA PORTB_DDR //Set PORTB as input
+
+//Rotary Decoder
+LDA started (mainLoopStart)
+ADDI 0
+JPZ *setStarted
+
+LDA PORTB (waitForLow)
+ANDI 0b00110000
+NOTB
+JPZ *waitForLow
+
+LDA PORTB (waitForDelta)
+ANDI 0b00100000
+NOTB
+JPZ *decrementCounter
+LDA PORTB
+ANDI 0b00010000
+NOTB
+JPZ *incrementCounter
+
+LDA PORTB (checkReset)
+ANDI 0b00001000
+JPZ *resetCounter
+
+JMP *waitForDelta
+
+//Decrement
+LDA counter (decrementCounter)
+SUBI 1
+JPC *underflow
+JMP *saveCounterDown
+LDAI 9 (underflow)
+RDA counter (saveCounterDown)
+JMP *setCounter
+
+//Increment
+LDA counter (incrementCounter)
+ADDI 1
+JPG *overflow
+JMP *saveCounterUp
+LDAI 0 (overflow)
+RDA counter (saveCounterUp)
+JMP *setCounter
+
+//Button Reset
+CPY counter ZERO (resetCounter)
+
+//Set Counter
+LDA counter (setCounter)
+SFM
+ADDI NUM0
+RDA *dataTransfer+2
+CPY PORTA NUM0 (dataTransfer)
+SHM
+JMP *mainLoopStart
+
+//Set started
+CPY started FULL_ONE (setStarted)
+JMP *setCounter
