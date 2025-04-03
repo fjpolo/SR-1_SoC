@@ -1,1 +1,3 @@
-This file is for the GOWIN FPGA DESIGNER and is the pin mappings for a layout done as in the pictures
+These files are for the GOWIN FPGA DESIGNER
+
+Use replace function of notepad++ or other text editor to replace all !!REPLACE!! markers in the .gprj file with your own root file location
