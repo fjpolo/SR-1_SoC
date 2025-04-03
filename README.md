@@ -17,7 +17,7 @@ The parameters to do so are as follows:
 - Read Mode: 		Bypass
 - Write Mode:		Normal
 - Reset Mode:		Asynchronous  
-However there is also a [AutoHotKey](HelperPrograms/BSRAM_Instantiate.ahk) script to automate the entry of these fields as it gets very tedious very fast.
+However there is also an [AutoHotKey](HelperPrograms/BSRAM_Instantiate.ahk) script to automate the entry of these fields as it gets very tedious very fast.
 
 ## Synthesis
 This SoC was synthesised onto a [Sipeed Tang Nano 9k](https://wiki.sipeed.com/hardware/en/tang/Tang-Nano-9K/Nano-9K.html).  
